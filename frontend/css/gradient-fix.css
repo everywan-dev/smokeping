@@ -1,0 +1,13 @@
+/* Fix para eliminar gradiente de fondo - igual que producción */
+#content {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+body,
+.wrapper {
+    background: #fff !important;
+    background-color: #fff !important;
+    background-image: none !important;
+}

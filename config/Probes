@@ -1,0 +1,12 @@
+*** Probes ***
++ FPing
+binary = /usr/sbin/fping
+step = 60
+pings = 20
+
++ TCPPing
+binary = /usr/bin/tcpping
+forks = 20
+offset = 50%
+step = 60
+timeout = 15

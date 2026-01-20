@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+	<TITLE>SmokePing Latency Page for <##title##></TITLE>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+		
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link rel="stylesheet" href="/smokeping/css/style.css">
+<link rel="stylesheet" href="/smokeping/css/logo-fix.css"><link rel="stylesheet" href="/smokeping/css/gradient-fix.css">
+<link rel="stylesheet" href="/smokeping/css/h2-fix.css">
+		<link rel="icon" href="/favicon.ico" type="image/x-icon">
+		<link rel="SHORTCUT ICON" type="image/x-icon" href="/favicon.ico"/>
+  </head>
+  <body>
+		
+		<div class="wrapper d-flex align-items-stretch">
+			<nav id="sidebar">
+				<div class="custom-menu">
+    					<button type="button" id="sidebarCollapse" class="btn btn-primary">
+          <i class="fa fa-bars"></i>
+          <span class="sr-only">Toggle Menu</span>
+        </button>
+            </div>
+				<div class="p-2">
+				<a href="index.html" class="logo"><img class="m-3" src="{{SMOKEPING_LOGO_URL}}"></a>
+	        <ul class="list-unstyled components mb-5">
+  				<##menu##>
+	        </ul>
+
+	        <div class="footer m-4">
+	        	<p><small>Maintained by <br/><A href="mailto:<##contact##>"><##owner##></A></small></p>
+						<p><small>Running on <##smokeping##> by <##author##>
+	        		<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+						  Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved
+						  <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. --></p>
+	        </div>
+
+	      </div>
+    	</nav>
+
+        <!-- Page Content  -->
+      <div id="content" class="p-4 p-md-4 pt-5">
+        <h4 class="mb-2 p-md-2"><##title##></h4>
+		<P><##remark##></P>
+		<P><##overview##></P>
+		<P><##body##></P>
+      </div>
+		</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="js/popper.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/main.js"></script>
+
+	<script>
+		jQuery.noConflict();
+	</script>    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/prototype/1.7.3/prototype.min.js" integrity="sha256-+3xgqfaj59RidkNCsaBCFrqFtEkU8Q57AoVtOOTYMBs=" crossorigin="anonymous"></script>
+	<script src="/smokeping/scriptaculous/scriptaculous.js?load=builder,effects,dragdrop" type="text/javascript"></script>
+	<script src="/smokeping/cropper/cropper.min.js"></script>
+	<script src="/smokeping/smokeping-zoom.js" type="text/javascript"></script>
+	<script src="js/traceping.js"></script>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  smokeping:
+    image: sistemasminorisa/smokeping:latest
+    container_name: smokeping
+    hostname: smokeping-master
+    ports:
+      - "8080:80"
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - SMOKEPING_OWNER=SmokePing Admin
+      - SMOKEPING_CONTACT=admin@example.com
+      - SMOKEPING_TITLE=SmokePing Monitoring
+      - SMOKEPING_BRAND_NAME=
+      - SMOKEPING_BRAND_URL=
+      - SMOKEPING_LOGO_URL=images/logo.svg
+      - SMOKEPING_HOSTNAME=smokeping-master
+      - TRACEPING_INTERVAL=300
+      - TRACEPING_RETENTION_DAYS=365
+    volumes:
+      - ./config:/config
+      - ./data:/data
+    restart: unless-stopped

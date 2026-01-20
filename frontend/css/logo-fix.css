@@ -1,0 +1,52 @@
+/* Fix para logo: tamaño adaptativo que no rompe el diseño */
+a.logo,
+.logo {
+    width: 140px !important;
+    height: 140px !important;
+    max-width: 140px !important;
+    max-height: 140px !important;
+    min-width: 140px !important;
+    min-height: 140px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+}
+
+.logo img,
+.logo img.m-3,
+a.logo img,
+a.logo img.m-3 {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* Asegurar que el contenedor del logo no se desborde */
+.p-2 .logo,
+.p-2 a.logo,
+.sidebar .logo,
+.sidebar a.logo,
+nav .logo,
+nav a.logo,
+#sidebar .logo,
+#sidebar a.logo {
+    width: 140px !important;
+    height: 140px !important;
+    max-width: 140px !important;
+    max-height: 140px !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+}

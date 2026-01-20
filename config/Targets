@@ -1,0 +1,405 @@
+###################################################
+*** Targets ***
+probe = FPing
+menu = top
+title = SmokePing Latency Grapher
+remark = Welcome to SmokePing Network Monitoring - Latency and packet loss monitoring across global networks.
+###################################################
+
++TechGiants
+menu = Tech Giants
+title = Global Tech Giants & Streaming Services
+
+++YouTube
+menu = YouTube
+title = YouTube (Google) - AS15169
+host = www.youtube.com
+
+++Netflix
+menu = Netflix
+title = Netflix (Fast.com) - AS2906
+host = fast.com
+
+++Microsoft
+menu = Microsoft
+title = Microsoft Corporation - AS8075
+host = www.microsoft.com
+
+++Meta_Facebook
+menu = Meta / Facebook
+title = Meta Platforms (Facebook) - AS32934
+host = www.facebook.com
+
+++Apple
+menu = Apple
+title = Apple Inc - AS714
+host = www.apple.com
+
+++Amazon
+menu = Amazon
+title = Amazon.com - AS16509
+host = www.amazon.com
+
+++Twitter_X
+menu = X (Twitter)
+title = X Corp (Twitter) - AS13414
+host = www.twitter.com
+
+++Spotify
+menu = Spotify
+title = Spotify Music Streaming - AS8403
+host = www.spotify.com
+
+++Twitch
+menu = Twitch
+title = Twitch (Amazon) - AS46489
+host = www.twitch.tv
+
+++Steam
+menu = Steam
+title = Steam (Valve) Gaming Platform
+host = store.steampowered.com
+
+++GitHub
+menu = GitHub
+title = GitHub (Microsoft) - AS36459
+host = github.com
+
+++LinkedIn
+menu = LinkedIn
+title = LinkedIn (Microsoft) - AS14413
+host = www.linkedin.com
+
+###################################################
++CDN
+menu = CDN & DNS
+title = Content Delivery Networks & Global DNS
+
+++CloudFlare
+menu = Cloudflare DNS (1.1.1.1)
+title = Cloudflare Public DNS - AS13335
+host = 1.1.1.1
+
+++CloudFlare_Secondary
+menu = Cloudflare DNS (1.0.0.1)
+title = Cloudflare Secondary DNS - AS13335
+host = 1.0.0.1
+
+++Google_DNS
+menu = Google DNS (8.8.8.8)
+title = Google Public DNS - AS15169
+host = 8.8.8.8
+
+++Google_DNS_Secondary
+menu = Google DNS Secondary (8.8.4.4)
+title = Google Public DNS Secondary - AS15169
+host = 8.8.4.4
+
+++Quad9
+menu = Quad9 DNS (9.9.9.9)
+title = Quad9 Secure DNS - AS19281
+host = 9.9.9.9
+
+++OpenDNS
+menu = OpenDNS (Cisco)
+title = OpenDNS by Cisco - AS36692
+host = 208.67.222.222
+
+++CacheFly
+menu = CacheFly CDN
+title = CacheFly CDN Network
+host = cachefly.cachefly.net
+
+++Akamai
+menu = Akamai CDN
+title = Akamai Technologies - AS20940
+host = 23.72.252.176
+
+++Fastly
+menu = Fastly CDN
+title = Fastly Edge Cloud - AS54113
+host = 151.101.1.57
+
+###################################################
++EMEA
+menu = EMEA
+title = Europe, Middle East & Africa
+
+++everyWAN_AS33932
+menu = everyWAN AS33932
+title = everyWAN AS33932
+host = lg.everywan.com
+
+
+# --- Spain ---
+
+++ES_Orange_BCN_AS12479
+probe = TCPPing
+port = 80
+menu = ES Orange (Barcelona) AS12479
+title = ES Orange (Barcelona) AS12479
+host = testvelocidad2.orange.es
+
+++ES_Orange_MAD_AS12479
+probe = TCPPing
+port = 80
+menu = ES Orange (Madrid) AS12479
+title = ES Orange (Madrid) AS12479
+host = testvelocidad1.orange.es
+
+++ES_Vodafone_BCN_AS12430
+menu = ES Vodafone (Barcelona) AS12430
+title = ES Vodafone (Barcelona) AS12430
+host = speedtestbarcelona2.vodafone.es
+
+++ES_Vodafone_MAD_AS12430
+menu = ES Vodafone (Madrid) AS12430
+title = ES Vodafone (Madrid) AS12430
+host = speedtestmadrid2.vodafone.es
+
+++ES_Telefonica_AS3352
+menu = ES Telefonica AS3352
+title = ES Telefonica AS3352
+host = 2.139.111.245
+
+++ES_Masmovil_BCN_AS15704
+menu = ES Masmovil (Barcelona) AS15704
+title = ES Masmovil (Barcelona) AS15704
+host = speedtest-bcn.masmovil.com
+
+# --- France ---
+
+++FR_OVH_AS16276
+menu = FR OVH AS16276
+title = FR OVH AS16276
+host = proof.ovh.net
+
+++FR_Free_AS12322
+menu = FR Free AS12322
+title = FR Free AS12322
+host = 212.27.48.1
+
+# --- Germany ---
+
+++DE_Hetzner_AS24940
+menu = DE Hetzner AS24940
+title = DE Hetzner Online AS24940
+host = 213.133.107.7
+
+++DE_1and1_AS8560
+menu = DE 1&1 AS8560
+title = DE 1&1 IONOS AS8560
+host = 82.165.225.1
+
+# --- UK ---
+
+++UK_Claranet_AS8426
+menu = UK Claranet AS8426
+title = UK Claranet AS8426
+host = 195.157.9.1
+
+# --- Netherlands ---
+
+++NL_Serverius_AS50673
+menu = NL Serverius AS50673
+title = NL Serverius AS50673
+host = speedtest.serverius.net
+
+# --- Italy ---
+
+++IT_Telecom_Italia_AS3269
+menu = IT Telecom Italia AS3269
+title = IT Telecom Italia AS3269
+host = 151.1.1.1
+
+# --- Sweden ---
+
+++SE_Telia_AS1299
+menu = SE Telia AS1299
+title = SE Telia Carrier AS1299
+host = 193.0.14.129
+
+# --- Switzerland ---
+
+++CH_Swisscom_AS3303
+menu = CH Swisscom AS3303
+title = CH Swisscom Switzerland AS3303
+host = 195.186.1.111
+
+# --- Poland ---
+
+++PL_Orange_AS5617
+menu = PL Orange Poland AS5617
+title = PL Orange Poland AS5617
+host = 194.9.24.1
+
+# --- Portugal ---
+
+++PT_LigaT_Telecom_AS50666
+menu = PT LigaT Telecom AS50666
+title = PT LigaT Telecom AS50666
+host = 185.228.160.1
+
+# --- Middle East ---
+
+++SA_STC_AS25019
+menu = SA STC AS25019
+title = SA Saudi Telecom Company AS25019
+host = 212.118.160.1
+
+# --- Africa ---
+
+++MA_MarocTelecom_AS6713
+menu = MA Maroc Telecom AS6713
+title = MA Maroc Telecom AS6713
+host = 41.249.32.1
+
+++ZA_Telkom_AS37457
+menu = ZA Telkom AS37457
+title = ZA Telkom South Africa AS37457
+host = 196.25.1.1
+
+++EG_TE_Data_AS8452
+menu = EG TE Data AS8452
+title = EG Telecom Egypt Data AS8452
+host = 163.121.128.1
+
+++AF_Afrinic_Root
+menu = Afrinic Root Server
+title = AFRINIC Root Server
+host = 196.216.2.1
+
+###################################################
++NA
+menu = NA
+title = North America (USA & Canada)
+
+++US_Level3_AS3356
+menu = US Level3 AS3356
+title = US Level3 Communications AS3356
+host = 4.2.2.1
+
+++US_GTT_AS3257
+menu = US GTT AS3257
+title = US GTT Communications AS3257
+host = 69.31.0.1
+
+++US_NTT_AS2914
+menu = US NTT America AS2914
+title = US NTT America AS2914
+host = 129.250.0.1
+
+++US_Hurricane_Electric_AS6939
+menu = US Hurricane Electric AS6939
+title = US Hurricane Electric AS6939
+host = 216.218.236.2
+
+++US_AWS_Virginia_AS16509
+menu = US AWS Virginia AS16509
+title = Amazon AWS US-East-1 AS16509
+host = dynamodb.us-east-1.amazonaws.com
+
+++US_Azure
+menu = US Microsoft Azure
+title = Microsoft Azure Cloud
+host = azure.microsoft.com
+
+++CA_Telus_AS852
+menu = CA Telus AS852
+title = CA Telus Communications AS852
+host = 96.52.0.1
+
+###################################################
++LATAM
+menu = LATAM
+title = Latin America (Central & South)
+
+++MX_Google
+menu = MX Google Mexico
+title = Google Mexico
+host = google.com.mx
+
+++MX_Izzi_AS11172
+menu = MX Izzi (Televisa) AS11172
+title = MX Izzi Telecom Mexico AS11172
+host = 189.216.0.1
+
+++BR_Vivo_AS26599
+menu = BR Vivo Telefonica AS26599
+title = BR Vivo Telefonica Brazil AS26599
+host = 200.175.89.139
+
+++AR_Telefonica_AS22927
+menu = AR Telefonica AS22927
+title = AR Telefonica Argentina AS22927
+host = 209.13.172.3
+
+++CO_Movistar_AS3816
+menu = CO Movistar AS3816
+title = CO Movistar Colombia AS3816
+host = 152.204.128.9
+
+++CL_Claro_AS18822
+menu = CL Claro AS18822
+title = CL Claro Chile AS18822
+host = 200.1.123.46
+
+++PE_Telefonica_AS6147
+menu = PE Telefonica AS6147
+title = PE Telefonica Peru AS6147
+host = 200.37.224.10
+
+###################################################
++APAC
+menu = APAC
+title = Asia Pacific
+
+++JP_NTT_AS2914
+menu = JP NTT Communications AS2914
+title = JP NTT Communications Japan AS2914
+host = 202.12.27.33
+
+++JP_KDDI_AS2516
+menu = JP KDDI AS2516
+title = JP KDDI Corporation Japan AS2516
+host = 203.141.128.1
+
+++KR_KT_AS4766
+menu = KR Korea Telecom AS4766
+title = KR Korea Telecom AS4766
+host = 168.126.63.1
+
+++CN_Baidu_AS38365
+menu = CN Baidu DNS AS38365
+title = CN Baidu Public DNS China AS38365
+host = 180.76.76.76
+
+++CN_Alibaba_AS37963
+menu = CN Alibaba DNS AS37963
+title = CN Alibaba AliDNS China AS37963
+host = 223.5.5.5
+
+++SG_Singtel_AS7473
+menu = SG Singtel AS7473
+title = SG Singtel Fibre Singapore AS7473
+host = 165.21.100.88
+
+++AU_Telstra_AS1221
+menu = AU Telstra AS1221
+title = AU Telstra Australia AS1221
+host = 139.130.4.5
+
+++AU_Optus_AS4804
+menu = AU Optus AS4804
+title = AU Optus Australia AS4804
+host = 203.50.2.71
+
+++IN_Google_India
+menu = IN Google India
+title = Google India
+host = 74.125.24.100
+
+++NZ_Google
+menu = NZ Google New Zealand
+title = Google New Zealand
+host = google.co.nz
