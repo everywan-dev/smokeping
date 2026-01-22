@@ -54,6 +54,17 @@ if [ ! -f "$HOTFIX_MARKER_V3" ]; then
     touch "$HOTFIX_MARKER_V3"
 fi
 
+# HOTFIX V4: Disable Sorters in Presentation to debug Overview crash (White Screen)
+HOTFIX_MARKER_V4="/config/.hotfix_v4_sorters_disabled"
+if [ ! -f "$HOTFIX_MARKER_V4" ]; then
+    echo "[custom-init] Applying Hotfix V4: Disabling Sorters in Presentation..."
+    if [ -f /config/Presentation ]; then
+        # Disable fancy sorters which might crash if deps are missing
+        sed -i 's/^sorter =/#sorter =/g' /config/Presentation
+    fi
+    touch "$HOTFIX_MARKER_V4"
+fi
+
 # Force update of basepage.html (system template) which is handled below...
 
 # --- 2. Setup Basepage ---
