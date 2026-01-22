@@ -1,22 +1,24 @@
 (function () {
     // Traceroute Integration for SmokePing
+    // Dynamically injects a panel with traceroute results based on the target
     var servers = [];
 
     function init() {
         var target = getParam('target');
-        // Filter out undesired views
+        // Only run if we are in a detail view (target is present) and not in special views
         if (!target || target.indexOf('~') !== -1 || target === '_charts') return;
 
+        // Find existing panels to determine injection point
+        var panels = document.querySelectorAll('.panel, .panel-no-border');
         var insertAfterPanel = null;
-        var insertPosition = 'after'; // 'after' (sibling) or 'append' (child)
 
         // STRATEGY 1: Look for Panels (Standard View with 3h, 30h... graphs)
-        var panels = document.querySelectorAll('.panel, .panel-no-border');
         for (var i = 0; i < panels.length; i++) {
             var panel = panels[i];
             var h2 = panel.querySelector('.panel-heading h2, .panel-heading-no-border h2');
             if (h2) {
                 var txt = h2.textContent;
+                // Look for "Last 3 Hours from HOSTNAME"
                 var m = txt.match(/from (.+)/);
                 if (m) {
                     var sdt = m[1].trim();
@@ -28,6 +30,7 @@
                         });
                     }
                     insertAfterPanel = panel;
+                    console.log("Traceroute: Found standard panel", insertAfterPanel);
                     // Stop at first graph (3 Hours)
                     break;
                 }
@@ -35,25 +38,36 @@
         }
 
         // STRATEGY 2: Look for Zoom/Detail View (displaymode=n)
-        // In this view, there might be no panels, just a big <img> tag.
+        // In this view, there might be no panels, just a big <img> tag or <input type="image"> for navigation.
         if (!insertAfterPanel) {
-            // Try to find the main graph image. 
-            // Usually mostly alone in a div or table cell.
-            var imgs = document.getElementsByTagName('img');
-            for (var i = 0; i < imgs.length; i++) {
-                var img = imgs[i];
-                // SmokePing RRD graphs are served via smokeping.cgi or contain typical dimensions
-                // Checking if src contains certain keywords or if it's large
-                if (img.src && (img.src.indexOf('smokeping.cgi') !== -1 || img.src.indexOf('RRD_') !== -1)) {
+            console.log("Traceroute: No panels found. Searching for main graph image...");
+
+            // Smokeping uses IMG for static graphs and INPUT[type=image] for interactive navigator
+            var potentialImages = [];
+            var imgNodes = document.getElementsByTagName('img');
+            var inputNodes = document.querySelectorAll('input[type="image"]');
+
+            for (var i = 0; i < imgNodes.length; i++) potentialImages.push(imgNodes[i]);
+            for (var i = 0; i < inputNodes.length; i++) potentialImages.push(inputNodes[i]);
+
+            for (var i = 0; i < potentialImages.length; i++) {
+                var img = potentialImages[i];
+                var src = img.src || '';
+
+                // SmokePing RRD graphs are served via smokeping.cgi or contain typical dimensions/names
+                if (src && (src.indexOf('smokeping.cgi') !== -1 || src.indexOf('RRD') !== -1)) {
                     // Check if it's the main graph (usually wider than icon)
-                    if (img.width > 300) {
+                    // If it is an input type image, it is DEFINITELY the navigator graph
+                    if (img.tagName === 'INPUT' || img.width > 300) {
+                        console.log("Traceroute: Found graph image", img);
                         insertAfterPanel = img;
-                        // If we found server name before, good. If not, use generic.
+
+                        // If in zoom view, target param is usually correct for the host
                         if (servers.length === 0) {
                             servers.push({
-                                name: target, // Use target name as label
+                                name: target,
                                 endpoint: '/smokeping/traceping.cgi',
-                                host: target // In zoom view, we might not know the slave, assume master/target
+                                host: target
                             });
                         }
                         break;
@@ -62,19 +76,22 @@
             }
         }
 
-        // Fallback checks
-        if (!insertAfterPanel && servers.length === 0) {
-            // Should we force insert at bottom?
-            // Let's rely on finding *something*.
-            return;
-        }
-
+        // Fallback if no server detected (use defaults)
         if (servers.length === 0) {
             servers.push({
                 name: 'Master',
                 endpoint: '/smokeping/traceping.cgi',
                 host: 'smokeping-master'
             });
+            // Try to find any panel to insert after (fallback)
+            if (!insertAfterPanel && panels.length > 0) {
+                insertAfterPanel = panels[0];
+            }
+        }
+
+        if (!insertAfterPanel) {
+            console.log("Traceroute: No insertion point found. Aborting.");
+            return;
         }
 
         // Create Traceroute Panel UI
@@ -106,16 +123,18 @@
 
             // Try to find the closest block container to insert AFTER
             var container = insertAfterPanel;
-            while (container.tagName === 'IMG' || container.tagName === 'A') {
+            // Go up until we hit a DIV, TD or BODY, skipping inline elements like A
+            while (container && container.tagName !== 'DIV' && container.tagName !== 'TD' && container.tagName !== 'BODY') {
                 container = container.parentNode;
             }
+            if (!container) container = insertAfterPanel.parentNode; // fallback
 
             // Insert after the container of the graph
             if (container.parentNode) {
                 container.parentNode.insertBefore(div, container.nextSibling);
             } else {
                 // Fallback
-                insertAfterPanel.parentNode.insertBefore(div, insertAfterPanel.nextSibling);
+                container.appendChild(div);
             }
         }
 
