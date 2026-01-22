@@ -41,6 +41,19 @@ if [ ! -f "$HOTFIX_MARKER" ]; then
     touch "$HOTFIX_MARKER"
 fi
 
+# HOTFIX V3: Sed replace graphborders to yes (safer than full overwrite) and nuke cache
+HOTFIX_MARKER_V3="/config/.hotfix_v3_done"
+if [ ! -f "$HOTFIX_MARKER_V3" ]; then
+    echo "[custom-init] Applying Hotfix V3: Ensuring graphborders=yes and cleaning cache..."
+    if [ -f /config/Presentation ]; then
+        sed -i 's/graphborders = no/graphborders = yes/g' /config/Presentation
+    fi
+    # Force permissions again just in case
+    chmod -R 777 /var/cache/smokeping /data /config
+    rm -rf /var/cache/smokeping/*
+    touch "$HOTFIX_MARKER_V3"
+fi
+
 # Force update of basepage.html (system template) which is handled below...
 
 # --- 2. Setup Basepage ---
