@@ -27,7 +27,18 @@ if [ ! -f "$CONFIG_MARKER" ]; then
     touch "$CONFIG_MARKER"
     echo "[custom-init] Enterprise configuration installed. User changes will now be respected."
 else
-    echo "[custom-init] System already initialized ($CONFIG_MARKER exists). Skipping config overwrite."
+    echo "[custom-init] System already initialized ($CONFIG_MARKER exists). Skipping full config overwrite."
+fi
+
+# HOTFIX V1: Force update of Presentation to fix Overview White Screen (graphborders issue)
+HOTFIX_MARKER="/config/.fix_presentation_v1"
+if [ ! -f "$HOTFIX_MARKER" ]; then
+    echo "[custom-init] Applying Hotfix V1: Resetting Presentation config..."
+    # Copy Presentation from image defaults to config volume
+    if [ -f /defaults/Presentation ]; then
+        cp -f /defaults/Presentation /config/Presentation
+    fi
+    touch "$HOTFIX_MARKER"
 fi
 
 # Force update of basepage.html (system template) which is handled below...

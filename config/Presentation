@@ -3,7 +3,7 @@
 template = /etc/smokeping/basepage.html
 charset = utf-8
 htmltitle = yes
-graphborders = no
+graphborders = yes
 
 + charts
 
