@@ -3,10 +3,8 @@ version: '3.8'
 services:
   smokeping:
     image: sistemasminorisa/smokeping:latest
-    container_name: smokeping
+    container_name: smokeping-swarm
     hostname: ${SMOKEPING_HOSTNAME:-smokeping-master}
-    env_file:
-      - .env
     environment:
       # --- System ---
       - PUID=${PUID:-1000}
@@ -24,15 +22,13 @@ services:
       - SMOKEPING_BRAND_URL=${SMOKEPING_BRAND_URL:-}
       - SMOKEPING_LOGO_URL=${SMOKEPING_LOGO_URL:-images/logo.svg}
       
-      # --- Theme & Colors (Defaults to Blue Theme) ---
+      # --- Colors ---
       - SMOKEPING_COLOR_PRIMARY=${SMOKEPING_COLOR_PRIMARY:-#007bff}
       - SMOKEPING_COLOR_SECONDARY=${SMOKEPING_COLOR_SECONDARY:-#6c757d}
       - SMOKEPING_COLOR_ACCENT=${SMOKEPING_COLOR_ACCENT:-#00d4ff}
       - SMOKEPING_COLOR_SIDEBAR_BG=${SMOKEPING_COLOR_SIDEBAR_BG:-#1a1a2e}
       - SMOKEPING_COLOR_SIDEBAR_TEXT=${SMOKEPING_COLOR_SIDEBAR_TEXT:-rgba(255,255,255,0.8)}
       - SMOKEPING_COLOR_HEADER_BG=${SMOKEPING_COLOR_HEADER_BG:-#16213e}
-      - SMOKEPING_FONT_FAMILY=${SMOKEPING_FONT_FAMILY:-Poppins, sans-serif}
-      - SMOKEPING_FONT_URL=${SMOKEPING_FONT_URL:-https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700}
       
       # --- Traceroute ---
       - TRACEPING_INTERVAL=${TRACEPING_INTERVAL:-300}
@@ -44,6 +40,7 @@ services:
       - NET_RAW
       - NET_ADMIN
     
+    # Volumes: Edit this for your Swarm storage (e.g., /mnt/ceph/swarm/smokeping/config)
     volumes:
       - ./config:/config
       - ./data:/data
@@ -54,50 +51,25 @@ services:
 
     restart: unless-stopped
     
-    # Labels for Traefik (Works for both Docker Compose and Swarm)
-    labels:
-      - "traefik.enable=true"
-      
-      # --- Router 1: Web Interface (Port 80) ---
-      # Rule: Host match AND NOT traceping path
-      - "traefik.http.routers.smokeping-web.rule=Host(`${DOMAIN}`) && !Path(`/smokeping/traceping.cgi`)"
-      - "traefik.http.routers.smokeping-web.entrypoints=websecure"
-      - "traefik.http.routers.smokeping-web.tls=true"
-      # Change 'leresolver' to match your Traefik certificate resolver name
-      - "traefik.http.routers.smokeping-web.tls.certresolver=leresolver"
-      - "traefik.http.routers.smokeping-web.service=smokeping-web-svc"
-      - "traefik.http.services.smokeping-web-svc.loadbalancer.server.port=80"
-      
-      # Middleware: Redirect /smokeping to /smokeping/ to fix relative links
-      - "traefik.http.middlewares.sp-add-slash.redirectregex.regex=^https?://([^/]+)/smokeping$$"
-      - "traefik.http.middlewares.sp-add-slash.redirectregex.replacement=https://$${1}/smokeping/"
-      - "traefik.http.routers.smokeping-web.middlewares=sp-add-slash"
-
-      # --- Router 2: Traceroute Backend (Port 9000) ---
-      # Rule: Host match AND traceping path
-      - "traefik.http.routers.smokeping-trace.rule=Host(`${DOMAIN}`) && Path(`/smokeping/traceping.cgi`)"
-      - "traefik.http.routers.smokeping-trace.entrypoints=websecure"
-      - "traefik.http.routers.smokeping-trace.tls=true"
-      - "traefik.http.routers.smokeping-trace.tls.certresolver=leresolver"
-      - "traefik.http.routers.smokeping-trace.service=smokeping-trace-svc"
-      - "traefik.http.services.smokeping-trace-svc.loadbalancer.server.port=9000"
-
-    # Swarm Deployment config
     deploy:
       mode: replicated
       replicas: 1
       labels:
-        # Duplicated labels for strict Swarm mode visibility
         - "traefik.enable=true"
+        # Router 1: Web Interface (Port 80)
         - "traefik.http.routers.smokeping-web.rule=Host(`${DOMAIN}`) && !Path(`/smokeping/traceping.cgi`)"
         - "traefik.http.routers.smokeping-web.entrypoints=websecure"
         - "traefik.http.routers.smokeping-web.tls=true"
-        - "traefik.http.routers.smokeping-web.tls.certresolver=leresolver"
+        - "traefik.http.routers.smokeping-web.tls.certresolver=leresolver" 
         - "traefik.http.routers.smokeping-web.service=smokeping-web-svc"
         - "traefik.http.services.smokeping-web-svc.loadbalancer.server.port=80"
+        
+        # Middleware: Fix redirects
         - "traefik.http.middlewares.sp-add-slash.redirectregex.regex=^https?://([^/]+)/smokeping$$"
         - "traefik.http.middlewares.sp-add-slash.redirectregex.replacement=https://$${1}/smokeping/"
         - "traefik.http.routers.smokeping-web.middlewares=sp-add-slash"
+
+        # Router 2: Traceroute Backend (Port 9000)
         - "traefik.http.routers.smokeping-trace.rule=Host(`${DOMAIN}`) && Path(`/smokeping/traceping.cgi`)"
         - "traefik.http.routers.smokeping-trace.entrypoints=websecure"
         - "traefik.http.routers.smokeping-trace.tls=true"

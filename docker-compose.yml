@@ -1,6 +1,8 @@
+version: '3.8'
+
 services:
   traefik:
-    image: traefik:v2.10
+    image: traefik:v3.0
     container_name: traefik
     restart: unless-stopped
     security_opt:
@@ -8,15 +10,13 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      # Dashboard (optional, secure it or keep local only)
-      # - "8080:8080" 
     environment:
       - CF_API_EMAIL=${ACME_EMAIL}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik-data/acme.json:/acme.json # Store certificates
+      - ./traefik-data/acme.json:/acme.json
     command:
-      - "--api.dashboard=false" # Dashboard disabled by default for security
+      - "--api.dashboard=false"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
@@ -33,11 +33,6 @@ services:
     image: sistemasminorisa/smokeping:latest
     container_name: smokeping
     hostname: ${SMOKEPING_HOSTNAME:-smokeping-master}
-    cap_add:
-      - NET_RAW
-      - NET_ADMIN
-    env_file:
-      - .env
     environment:
       # --- System ---
       - PUID=${PUID:-1000}
@@ -55,46 +50,47 @@ services:
       - SMOKEPING_BRAND_URL=${SMOKEPING_BRAND_URL:-}
       - SMOKEPING_LOGO_URL=${SMOKEPING_LOGO_URL:-images/logo.svg}
       
-      # --- Theme & Colors (Defaults to Blue Theme) ---
+      # --- Colors ---
       - SMOKEPING_COLOR_PRIMARY=${SMOKEPING_COLOR_PRIMARY:-#007bff}
       - SMOKEPING_COLOR_SECONDARY=${SMOKEPING_COLOR_SECONDARY:-#6c757d}
       - SMOKEPING_COLOR_ACCENT=${SMOKEPING_COLOR_ACCENT:-#00d4ff}
       - SMOKEPING_COLOR_SIDEBAR_BG=${SMOKEPING_COLOR_SIDEBAR_BG:-#1a1a2e}
       - SMOKEPING_COLOR_SIDEBAR_TEXT=${SMOKEPING_COLOR_SIDEBAR_TEXT:-rgba(255,255,255,0.8)}
       - SMOKEPING_COLOR_HEADER_BG=${SMOKEPING_COLOR_HEADER_BG:-#16213e}
-      - SMOKEPING_FONT_FAMILY=${SMOKEPING_FONT_FAMILY:-Poppins, sans-serif}
-      - SMOKEPING_FONT_URL=${SMOKEPING_FONT_URL:-https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700}
       
       # --- Traceroute ---
       - TRACEPING_INTERVAL=${TRACEPING_INTERVAL:-300}
       - TRACEPING_RETENTION_DAYS=${TRACEPING_RETENTION_DAYS:-365}
       - TRACEPING_PORT=${TRACEPING_PORT:-9000}
 
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    
     volumes:
       - ./config:/config
       - ./data:/data
       - ./logs:/logs
+    
     restart: unless-stopped
     networks:
       - smokeping-net
+    
     labels:
       - "traefik.enable=true"
-      
-      # --- Router 1: Web Interface (Port 80) ---
-      # Redirect /smokeping to /smokeping/ (Middleware)
-      - "traefik.http.middlewares.add-slash.redirectregex.regex=^https?://([^/]+)/smokeping$$"
-      - "traefik.http.middlewares.add-slash.redirectregex.replacement=https://$${1}/smokeping/"
-      
-      # Main Rule: Everything except traceping.cgi goes to web service on port 80
+      # Router 1: Web Interface
       - "traefik.http.routers.smokeping-web.rule=Host(`${DOMAIN}`) && !Path(`/smokeping/traceping.cgi`)"
       - "traefik.http.routers.smokeping-web.entrypoints=websecure"
       - "traefik.http.routers.smokeping-web.tls=true"
       - "traefik.http.routers.smokeping-web.tls.certresolver=le"
-      - "traefik.http.routers.smokeping-web.middlewares=add-slash"
       - "traefik.http.services.smokeping-web.loadbalancer.server.port=80"
       
-      # --- Router 2: Traceroute Backend (Port 9000) ---
-      # Send specific traceping.cgi requests to port 9000
+      # Middleware
+      - "traefik.http.middlewares.add-slash.redirectregex.regex=^https?://([^/]+)/smokeping$$"
+      - "traefik.http.middlewares.add-slash.redirectregex.replacement=https://$${1}/smokeping/"
+      - "traefik.http.routers.smokeping-web.middlewares=add-slash"
+
+      # Router 2: Traceroute Backend
       - "traefik.http.routers.smokeping-trace.rule=Host(`${DOMAIN}`) && Path(`/smokeping/traceping.cgi`)"
       - "traefik.http.routers.smokeping-trace.entrypoints=websecure"
       - "traefik.http.routers.smokeping-trace.tls=true"
