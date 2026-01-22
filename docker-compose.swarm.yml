@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  smokeping:
+    image: sistemasminorisa/smokeping:latest
+    container_name: smokeping
+    hostname: ${SMOKEPING_HOSTNAME:-smokeping-master}
+    env_file:
+      - .env
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Madrid}
+    
+    # Capabilities for ping/traceroute
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    
+    volumes:
+      - ./config:/config
+      - ./data:/data
+      - ./logs:/logs
+    
+    networks:
+      - traefik-public
+
+    restart: unless-stopped
+    
+    # Labels for Traefik (Works for both Docker Compose and Swarm)
+    labels:
+      - "traefik.enable=true"
+      
+      # --- Router 1: Web Interface (Port 80) ---
+      # Rule: Host match AND NOT traceping path
+      - "traefik.http.routers.smokeping-web.rule=Host(`${DOMAIN}`) && !Path(`/smokeping/traceping.cgi`)"
+      - "traefik.http.routers.smokeping-web.entrypoints=websecure"
+      - "traefik.http.routers.smokeping-web.tls=true"
+      # Change 'leresolver' to match your Traefik certificate resolver name
+      - "traefik.http.routers.smokeping-web.tls.certresolver=leresolver"
+      - "traefik.http.routers.smokeping-web.service=smokeping-web-svc"
+      - "traefik.http.services.smokeping-web-svc.loadbalancer.server.port=80"
+      
+      # Middleware: Redirect /smokeping to /smokeping/ to fix relative links
+      - "traefik.http.middlewares.sp-add-slash.redirectregex.regex=^https?://([^/]+)/smokeping$$"
+      - "traefik.http.middlewares.sp-add-slash.redirectregex.replacement=https://$${1}/smokeping/"
+      - "traefik.http.routers.smokeping-web.middlewares=sp-add-slash"
+
+      # --- Router 2: Traceroute Backend (Port 9000) ---
+      # Rule: Host match AND traceping path
+      - "traefik.http.routers.smokeping-trace.rule=Host(`${DOMAIN}`) && Path(`/smokeping/traceping.cgi`)"
+      - "traefik.http.routers.smokeping-trace.entrypoints=websecure"
+      - "traefik.http.routers.smokeping-trace.tls=true"
+      - "traefik.http.routers.smokeping-trace.tls.certresolver=leresolver"
+      - "traefik.http.routers.smokeping-trace.service=smokeping-trace-svc"
+      - "traefik.http.services.smokeping-trace-svc.loadbalancer.server.port=9000"
+
+    # Swarm Deployment config
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        # Duplicated labels for strict Swarm mode visibility
+        - "traefik.enable=true"
+        - "traefik.http.routers.smokeping-web.rule=Host(`${DOMAIN}`) && !Path(`/smokeping/traceping.cgi`)"
+        - "traefik.http.routers.smokeping-web.entrypoints=websecure"
+        - "traefik.http.routers.smokeping-web.tls=true"
+        - "traefik.http.routers.smokeping-web.tls.certresolver=leresolver"
+        - "traefik.http.routers.smokeping-web.service=smokeping-web-svc"
+        - "traefik.http.services.smokeping-web-svc.loadbalancer.server.port=80"
+        - "traefik.http.middlewares.sp-add-slash.redirectregex.regex=^https?://([^/]+)/smokeping$$"
+        - "traefik.http.middlewares.sp-add-slash.redirectregex.replacement=https://$${1}/smokeping/"
+        - "traefik.http.routers.smokeping-web.middlewares=sp-add-slash"
+        - "traefik.http.routers.smokeping-trace.rule=Host(`${DOMAIN}`) && Path(`/smokeping/traceping.cgi`)"
+        - "traefik.http.routers.smokeping-trace.entrypoints=websecure"
+        - "traefik.http.routers.smokeping-trace.tls=true"
+        - "traefik.http.routers.smokeping-trace.tls.certresolver=leresolver"
+        - "traefik.http.routers.smokeping-trace.service=smokeping-trace-svc"
+        - "traefik.http.services.smokeping-trace-svc.loadbalancer.server.port=9000"
+
+networks:
+  traefik-public:
+    external: true

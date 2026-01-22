@@ -137,6 +137,19 @@ This deployment uses **Traefik** as a reverse proxy to strictly manage routing a
 -   **443**: HTTPS (Secure Access).
 -   **Note**: Traefik manages these ports. The SmokePing container is not exposed directly.
 
+## 🐝 Swarm / External Traefik Deployment
+
+If you already have a Traefik instance running (e.g., in a Docker Swarm cluster or central proxy), use the provided `docker-compose.swarm.yml`.
+
+1.  Ensure your external network is named `traefik-public` (or edit the yaml).
+2.  Deploy using the swarm file:
+    ```bash
+    docker stack deploy -c docker-compose.swarm.yml smokeping
+    # OR for plain docker-compose with external traefik:
+    docker-compose -f docker-compose.swarm.yml up -d
+    ```
+3.  Ensure your `.env` file defines `DOMAIN` correctly.
+
 ---
 
 ## 📦 Build & Release
