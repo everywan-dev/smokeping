@@ -7,8 +7,22 @@ echo "[custom-init] Starting custom configuration..."
 
 # --- 1. Copy Configuration Files ---
 echo "[custom-init] Copying configuration files..."
-[ -f /defaults/Targets ] && cp -f /defaults/Targets /config/Targets
-[ -f /defaults/Probes ] && cp -f /defaults/Probes /config/Probes
+# Copy all default configs if not present in /config
+if [ -d /defaults ]; then
+    for file in /defaults/*; do
+        filename=$(basename "$file")
+        if [ ! -f "/config/$filename" ]; then
+            echo "[custom-init] Installing default config: $filename"
+            cp -r "$file" "/config/$filename"
+        else
+            # For critical styling files like Presentation, check if we should update?
+            # For now, we respect existing config but log it.
+            echo "[custom-init] Config exists, skipping: $filename"
+        fi
+    done
+fi
+
+# Force update of basepage.html (system template) which is handled below...
 
 # --- 2. Setup Basepage ---
 echo "[custom-init] Setting up basepage..."

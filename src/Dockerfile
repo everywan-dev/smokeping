@@ -35,9 +35,8 @@ COPY src/perl/traceping.cgi.pl /usr/share/webapps/smokeping/traceping.cgi.pl
 COPY src/frontend/ /usr/share/webapps/smokeping/
 COPY src/frontend/basepage.html /etc/smokeping/basepage.html
 
-# Copy default config (will be used by init script if config is empty)
-COPY config/Targets /defaults/Targets
-COPY config/Probes /defaults/Probes
+# Copy all default configs (Targets, Probes, Presentation, General, etc.)
+COPY config/ /defaults/
 
 # ==========================================
 # 4. Setup Init Scripts (LSIO custom hooks)
