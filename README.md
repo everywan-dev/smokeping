@@ -2,7 +2,7 @@
 
 This is a heavily enhanced Docker implementation of **SmokePing**, featuring a modern UI, integrated Traceroute, and full customization capabilities (Branding, Colors, Fonts) via environment variables.
 
-![SmokePing Enterprise](frontend/images/logo.svg)
+
 
 ## 🚀 Features
 
