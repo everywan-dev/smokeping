@@ -1,43 +1,32 @@
-# Variables de entorno
+# Environment files
 .env
 
-# Datos y logs
-data/*
-!data/.gitkeep
-logs/*
-!logs/.gitkeep
+# Data directories (contain runtime data)
+data/
+logs/
+traceroute_history/
 
-# Archivos temporales
-*.bak
-*.old
-*.tmp
-*.swp
-*~
-
-# Python
-__pycache__/
+# Cache
 *.pyc
-*.pyo
-*.pyd
-.Python
+__pycache__/
+.cache/
 
-# Entornos virtuales
-venv/
-env/
-ENV/
-
-# IDE
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
-
-# OS
+# OS files
 .DS_Store
 Thumbs.db
-desktop.ini
 
-# Backups
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Backup files
+*.bak
 *.backup
-*.tar.gz
-*.tar
+*.original
+*~
+
+# Temporary files
+*.tmp
+*.temp

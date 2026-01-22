@@ -1,7 +1,7 @@
 *** General ***
 
-owner    = SmokePing Admin
-contact  = admin@example.com
+owner    = Neo
+contact  = neo@matrix.com
 mailhost = my.mail.host
 # NOTE: do not put the Image Cache below cgi-bin
 # since all files under cgi-bin will be executed ... this is not
@@ -16,4 +16,4 @@ syslogfacility = local0
 @include /config/pathnames
 
 # Display name para gráficos (configurable desde docker-compose)
-display_name = smokeping-master
+display_name = matrix-node-1

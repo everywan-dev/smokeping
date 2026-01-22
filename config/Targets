@@ -126,8 +126,8 @@ menu = EMEA
 title = Europe, Middle East & Africa
 
 ++everyWAN_AS33932
-menu = everyWAN AS33932
-title = everyWAN AS33932
+menu = ES everyWAN (Barcelona) AS33932
+title = ES everyWAN (Barcelona) AS33932
 host = lg.everywan.com
 
 
