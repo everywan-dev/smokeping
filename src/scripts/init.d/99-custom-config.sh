@@ -165,13 +165,22 @@ if ! grep -q "custom-colors.css" /etc/smokeping/basepage.html; then
     sed -i 's|</head>|<link rel="stylesheet" href="/smokeping/css/custom-colors.css">\n</head>|' /etc/smokeping/basepage.html
 fi
 
-# --- 5. Fix Permissions ---
+# --- 5. Fix Permissions (Aggressive) ---
 echo "[custom-init] Fixing permissions..."
 PUID=${PUID:-1000}
 PGID=${PGID:-1000}
+
+# Set ownership primarily
 chown -R $PUID:$PGID /config /data /usr/share/webapps/smokeping
-# Ensure cache dir exists and is writable
+
+# Ensure cache dir exists
 mkdir -p /var/cache/smokeping
 chown -R $PUID:$PGID /var/cache/smokeping
 
-echo "[custom-init] Configuration complete."
+# "Nuclear Option": Set 777 on critical write directories to prevent empty graphs/white screens
+# This ensures that even if CGI runs as a different user than Daemon, both can write.
+chmod -R 777 /var/cache/smokeping
+chmod -R 777 /data
+chmod -R 777 /logs
+
+echo "[custom-init] Configuration and Permissions complete."
