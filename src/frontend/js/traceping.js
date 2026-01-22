@@ -15,7 +15,9 @@
         var panels = document.querySelectorAll('.panel, .panel-no-border');
         var insertAfterPanel = null;
 
-        panels.forEach(function (panel) {
+        // Loop using for loop to allow breaking on first match
+        for (var i = 0; i < panels.length; i++) {
+            var panel = panels[i];
             var h2 = panel.querySelector('.panel-heading h2, .panel-heading-no-border h2');
             if (h2) {
                 var txt = h2.textContent;
@@ -30,10 +32,13 @@
                             host: sdt
                         });
                     }
+                    insertAfterPanel = panel;
+                    // WARNING: Stop searching after the first graph (which is the 3 Hours one).
+                    // If we don't break, it keeps going and selects the last one (360 Days), putting traceroute at the bottom.
+                    break;
                 }
-                insertAfterPanel = panel;
             }
-        });
+        }
 
         // Fallback if no server detected (use defaults)
         if (servers.length === 0) {
