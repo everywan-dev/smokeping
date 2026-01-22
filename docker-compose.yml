@@ -1,10 +1,38 @@
 services:
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80"
+      - "443:443"
+      # Panel de control (opcional, protegido o solo local)
+      # - "8080:8080" 
+    environment:
+      - CF_API_EMAIL=${ACME_EMAIL}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik-data/acme.json:/acme.json # Guardar certificados
+    command:
+      - "--api.dashboard=false" # Dashboard desactivado por seguridad por defecto
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--certificatesresolvers.le.acme.tlschallenge=true"
+      - "--certificatesresolvers.le.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.le.acme.storage=/acme.json"
+    networks:
+      - smokeping-net
+
   smokeping:
     image: sistemasminorisa/smokeping:latest
     container_name: smokeping
     hostname: ${SMOKEPING_HOSTNAME:-smokeping-master}
-    ports:
-      - "${SMOKEPING_INTERNAL_PORT:-8081}:80"
     cap_add:
       - NET_RAW
       - NET_ADMIN
@@ -21,20 +49,27 @@ services:
     restart: unless-stopped
     networks:
       - smokeping-net
-
-  nginx:
-    image: nginx:alpine
-    container_name: smokeping-nginx
-    ports:
-      - "${PORT:-8085}:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - smokeping
-    restart: unless-stopped
-    networks:
-      - smokeping-net
+    labels:
+      - "traefik.enable=true"
+      
+      # --- Router 1: Web Interface (Puerto 80) ---
+      # Redirigir /smokeping a /smokeping/ (Middleware)
+      - "traefik.http.middlewares.add-slash.redirectregex.regex=^https?://([^/]+)/smokeping$$"
+      - "traefik.http.middlewares.add-slash.redirectregex.replacement=https://$${1}/smokeping/"
+      
+      # Regla principal: Todo menos el traceroute CGI va al servicio web en puerto 80
+      - "traefik.http.routers.smokeping-web.rule=Host(`${DOMAIN}`) && !Path(`/smokeping/traceping.cgi`)"
+      - "traefik.http.routers.smokeping-web.entrypoints=websecure"
+      - "traefik.http.routers.smokeping-web.tls.certresolver=le"
+      - "traefik.http.routers.smokeping-web.middlewares=add-slash"
+      - "traefik.http.services.smokeping-web.loadbalancer.server.port=80"
+      
+      # --- Router 2: Traceroute Backend (Puerto 9000) ---
+      # Enviar peticiones específicas de traceping.cgi al puerto 9000
+      - "traefik.http.routers.smokeping-trace.rule=Host(`${DOMAIN}`) && Path(`/smokeping/traceping.cgi`)"
+      - "traefik.http.routers.smokeping-trace.entrypoints=websecure"
+      - "traefik.http.routers.smokeping-trace.tls.certresolver=le"
+      - "traefik.http.services.smokeping-trace.loadbalancer.server.port=9000"
 
 networks:
   smokeping-net:

@@ -1,0 +1,34 @@
+
+## 📡 Traceroute Configuration
+
+The system automatically runs traceroutes for all defined targets in your config.
+
+-   **Interval**: How often to run traceroute (default: 300s).
+-   **Retention**: How long to keep history (default: 365 days).
+
+Configuration in `.env`:
+```ini
+TRACEPING_INTERVAL=300
+TRACEPING_RETENTION_DAYS=365
+```
+
+---
+
+## ⚙️ Advanced Configuration
+
+### Adding Targets
+Edit `config/Targets` to add your hosts. The syntax follows standard SmokePing configuration.
+
+Example:
+```perl
+++ MyTarget
+menu = My Target Host
+title = My Target Host
+host = my.host.com
+```
+
+### Docker Image
+The official image is available at DockerHub:
+`sistemasminorisa/smokeping:latest`
+
+---

@@ -24,16 +24,16 @@ RUN mkdir -p /opt/traceroute_history /opt/smokeping/lib
 # ==========================================
 # 2. Add TracePing Backend Scripts
 # ==========================================
-COPY traceping_daemon.pl /opt/smokeping/traceping_daemon.pl
-COPY traceping_server_simple.pl /opt/smokeping/traceping_server_simple.pl
-COPY traceping.cgi /usr/share/webapps/smokeping/traceping.cgi
-COPY traceping.cgi.pl /usr/share/webapps/smokeping/traceping.cgi.pl
+COPY src/perl/traceping_daemon.pl /opt/smokeping/traceping_daemon.pl
+COPY src/perl/traceping_server_simple.pl /opt/smokeping/traceping_server_simple.pl
+COPY src/perl/traceping.cgi /usr/share/webapps/smokeping/traceping.cgi
+COPY src/perl/traceping.cgi.pl /usr/share/webapps/smokeping/traceping.cgi.pl
 
 # ==========================================
 # 3. Add Custom Frontend Assets
 # ==========================================
-COPY frontend/ /usr/share/webapps/smokeping/
-COPY frontend/basepage.html /etc/smokeping/basepage.html
+COPY src/frontend/ /usr/share/webapps/smokeping/
+COPY src/frontend/basepage.html /etc/smokeping/basepage.html
 
 # Copy default config (will be used by init script if config is empty)
 COPY config/Targets /defaults/Targets
@@ -45,9 +45,9 @@ COPY config/Probes /defaults/Probes
 # LinuxServer.io supports /custom-cont-init.d for custom initialization
 RUN mkdir -p /custom-cont-init.d
 
-COPY scripts/init.d/99-custom-config.sh /custom-cont-init.d/99-custom-config.sh
-COPY scripts/init.d/99-start-traceping-daemon.sh /custom-cont-init.d/99-start-traceping-daemon.sh
-COPY scripts/init.d/99-start-traceping-server.sh /custom-cont-init.d/99-start-traceping-server.sh
+COPY src/scripts/init.d/99-custom-config.sh /custom-cont-init.d/99-custom-config.sh
+COPY src/scripts/init.d/99-start-traceping-daemon.sh /custom-cont-init.d/99-start-traceping-daemon.sh
+COPY src/scripts/init.d/99-start-traceping-server.sh /custom-cont-init.d/99-start-traceping-server.sh
 
 # ==========================================
 # 5. Permissions & Cleanup

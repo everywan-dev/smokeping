@@ -1,32 +1,15 @@
-# Environment files
+# Docker volumes
+/data/
+/logs/
+/traefik-data/
+
+# Environment local
 .env
 
-# Data directories (contain runtime data)
-data/
-logs/
-traceroute_history/
-
-# Cache
-*.pyc
-__pycache__/
-.cache/
-
-# OS files
+# MacOS artifacts
 .DS_Store
-Thumbs.db
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Backup files
-*.bak
-*.backup
-*.original
-*~
 
 # Temporary files
-*.tmp
-*.temp
+*.swp
+*.bak
+*.log
