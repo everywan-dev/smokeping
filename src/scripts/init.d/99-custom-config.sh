@@ -5,20 +5,63 @@
 
 echo "[custom-init] Starting custom configuration..."
 
-# --- 1. Copy Configuration Files ---
-echo "[custom-init] Copying configuration files..."
-# Copy all default configs if not present in /config
+# --- 1. Copy Configuration Files (Smart Overwrite) ---
+echo "[custom-init] Checking configuration..."
+
+# Function to smart copy
+smart_copy() {
+    src="$1"
+    dst="$2"
+    filename=$(basename "$src")
+    
+    if [ ! -f "$dst" ]; then
+        echo "[custom-init] Installing missing config: $filename"
+        cp -r "$src" "$dst"
+        return
+    fi
+    
+    # Heuristic: If destination is the generic LSIO default, overwrite it
+    # Targets: LSIO default usually has "Internet Sites" or "Some Internet Sites"
+    if [ "$filename" = "Targets" ] && grep -q "Internet Sites" "$dst"; then
+         echo "[custom-init] Detected generic Targets. Overwriting with Enterprise Targets..."
+         cp -f "$src" "$dst"
+         return
+    fi
+    
+    # Probes: If generic content, overwrite (LSIO default is usually minimal)
+    # Checking specific known default probe count or comments could work, 
+    # but for now we'll stick to 'Targets' as the main trigger to sync others?
+    # No, let's keep it safe. Only force Targets if we are sure.
+    
+    # Presentation/General: Critical for look & feel. 
+    # Verify if it contains our specific "Enterprise" markers or if it's LSIO default.
+    # LSIO Presentation usually mentions "Oetiker". Ours might too.
+    # Strategy: If Targets was overwritten, assume clean install and overwrite EVERYTHING else too.
+    if [ "$targets_overwritten" = "true" ]; then
+         echo "[custom-init] Fresh install detected. Syncing $filename..."
+         cp -rf "$src" "$dst"
+         return
+    fi
+
+    echo "[custom-init] Keeping existing config: $filename"
+}
+
+# Check Targets FIRST to determine install state
+targets_overwritten="false"
+if [ -f "/defaults/Targets" ]; then
+    if [ ! -f "/config/Targets" ] || grep -q "Internet Sites" "/config/Targets"; then
+        echo "[custom-init] Overwriting Targets..."
+        cp -f /defaults/Targets /config/Targets
+        targets_overwritten="true"
+    fi
+fi
+
+# Now process all other files
 if [ -d /defaults ]; then
     for file in /defaults/*; do
-        filename=$(basename "$file")
-        if [ ! -f "/config/$filename" ]; then
-            echo "[custom-init] Installing default config: $filename"
-            cp -r "$file" "/config/$filename"
-        else
-            # For critical styling files like Presentation, check if we should update?
-            # For now, we respect existing config but log it.
-            echo "[custom-init] Config exists, skipping: $filename"
-        fi
+        # Skip Targets as we handled it
+        if [ "$(basename "$file")" = "Targets" ]; then continue; fi
+        smart_copy "$file" "/config/$(basename "$file")"
     done
 fi
 
