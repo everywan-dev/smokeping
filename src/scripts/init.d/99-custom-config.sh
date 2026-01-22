@@ -5,64 +5,29 @@
 
 echo "[custom-init] Starting custom configuration..."
 
-# --- 1. Copy Configuration Files (Smart Overwrite) ---
-echo "[custom-init] Checking configuration..."
+# --- 1. Copy Configuration Files (Safe Run-Once) ---
+echo "[custom-init] Checking configuration status..."
 
-# Function to smart copy
-smart_copy() {
-    src="$1"
-    dst="$2"
-    filename=$(basename "$src")
+CONFIG_MARKER="/config/.enterprise_installed"
+
+if [ ! -f "$CONFIG_MARKER" ]; then
+    echo "[custom-init] First run detected (or factory reset). Installing Enterprise Configuration..."
     
-    if [ ! -f "$dst" ]; then
-        echo "[custom-init] Installing missing config: $filename"
-        cp -r "$src" "$dst"
-        return
+    # Force overwrite of critical config files from our defaults
+    # This replaces the generic LSIO defaults that might have just been created
+    if [ -d /defaults ]; then
+        for file in /defaults/*; do
+            filename=$(basename "$file")
+            echo "[custom-init] Initializing $filename..."
+            cp -rf "$file" "/config/$filename"
+        done
     fi
     
-    # Heuristic: If destination is the generic LSIO default, overwrite it
-    # Targets: LSIO default usually has "Internet Sites" or "Some Internet Sites"
-    if [ "$filename" = "Targets" ] && grep -q "Internet Sites" "$dst"; then
-         echo "[custom-init] Detected generic Targets. Overwriting with Enterprise Targets..."
-         cp -f "$src" "$dst"
-         return
-    fi
-    
-    # Probes: If generic content, overwrite (LSIO default is usually minimal)
-    # Checking specific known default probe count or comments could work, 
-    # but for now we'll stick to 'Targets' as the main trigger to sync others?
-    # No, let's keep it safe. Only force Targets if we are sure.
-    
-    # Presentation/General: Critical for look & feel. 
-    # Verify if it contains our specific "Enterprise" markers or if it's LSIO default.
-    # LSIO Presentation usually mentions "Oetiker". Ours might too.
-    # Strategy: If Targets was overwritten, assume clean install and overwrite EVERYTHING else too.
-    if [ "$targets_overwritten" = "true" ]; then
-         echo "[custom-init] Fresh install detected. Syncing $filename..."
-         cp -rf "$src" "$dst"
-         return
-    fi
-
-    echo "[custom-init] Keeping existing config: $filename"
-}
-
-# Check Targets FIRST to determine install state
-targets_overwritten="false"
-if [ -f "/defaults/Targets" ]; then
-    if [ ! -f "/config/Targets" ] || grep -q "Internet Sites" "/config/Targets"; then
-        echo "[custom-init] Overwriting Targets..."
-        cp -f /defaults/Targets /config/Targets
-        targets_overwritten="true"
-    fi
-fi
-
-# Now process all other files
-if [ -d /defaults ]; then
-    for file in /defaults/*; do
-        # Skip Targets as we handled it
-        if [ "$(basename "$file")" = "Targets" ]; then continue; fi
-        smart_copy "$file" "/config/$(basename "$file")"
-    done
+    # Create marker file to prevent future overwrites
+    touch "$CONFIG_MARKER"
+    echo "[custom-init] Enterprise configuration installed. User changes will now be respected."
+else
+    echo "[custom-init] System already initialized ($CONFIG_MARKER exists). Skipping config overwrite."
 fi
 
 # Force update of basepage.html (system template) which is handled below...
