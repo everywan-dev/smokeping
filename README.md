@@ -114,10 +114,28 @@ host = my.host.com
 The official image is available at DockerHub:
 `sistemasminorisa/smokeping:latest`
 
+---
+
+## 🌐 Domain & SSL (Traefik)
+
+This deployment uses **Traefik** as a reverse proxy to strictly manage routing and provide **Automatic HTTPS** (Let's Encrypt).
+
+### Configuration
+1.  Set your domain and email in `.env`:
+    ```ini
+    DOMAIN=smokeping.mycompany.com
+    ACME_EMAIL=admin@mycompany.com
+    ```
+2.  Traefik will handle:
+    -   Redirecting HTTP -> HTTPS.
+    -   Getting/Renewing SSL certificates.
+    -   Routing `/smokeping` to the web interface.
+    -   Routing `/smokeping/traceping.cgi` to the backend service.
+
 ### Ports
--   **8085**: External access (Nginx Proxy).
--   **80**: Internal SmokePing (do not expose directly).
--   **9000**: Internal Traceroute backend.
+-   **80**: HTTP (Auto-redirect to HTTPS).
+-   **443**: HTTPS (Secure Access).
+-   **Note**: Traefik manages these ports. The SmokePing container is not exposed directly.
 
 ---
 
