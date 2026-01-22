@@ -47,8 +47,9 @@
             var imgNodes = document.getElementsByTagName('img');
             var inputNodes = document.querySelectorAll('input[type="image"]');
 
-            for (var i = 0; i < imgNodes.length; i++) potentialImages.push(imgNodes[i]);
+            // We prioritize INPUT because that's the Zoom Navigator
             for (var i = 0; i < inputNodes.length; i++) potentialImages.push(inputNodes[i]);
+            // We ignore standard IMG tags to avoid false positives in Overview mode which cause layout breakage
 
             for (var i = 0; i < potentialImages.length; i++) {
                 var img = potentialImages[i];
@@ -56,10 +57,10 @@
 
                 // SmokePing RRD graphs are served via smokeping.cgi or contain typical dimensions/names
                 if (src && (src.indexOf('smokeping.cgi') !== -1 || src.indexOf('RRD') !== -1)) {
-                    // Check if it's the main graph (usually wider than icon)
-                    // If it is an input type image, it is DEFINITELY the navigator graph
-                    if (img.tagName === 'INPUT' || img.width > 300) {
-                        console.log("Traceroute: Found graph image", img);
+                    // Check if it's the main graph
+                    // CRITICAL FIX: Only accept INPUT (Navigator). Standard IMGs are risky in Overview.
+                    if (img.tagName === 'INPUT') {
+                        console.log("Traceroute: Found Navigator graph", img);
                         insertAfterPanel = img;
 
                         // If in zoom view, target param is usually correct for the host
@@ -90,7 +91,7 @@
         }
 
         if (!insertAfterPanel) {
-            console.log("Traceroute: No insertion point found. Aborting.");
+            console.log("Traceroute: No insertion point found. Aborting to protect layout.");
             return;
         }
 
@@ -186,36 +187,25 @@
         xhr.send();
     }
 
+    /* Setup functions ... */
     function setupRefresh(idx, endpoint, target) {
         var btn = document.getElementById('refresh-' + idx);
         if (!btn) return;
-
-        btn.onclick = function () {
-            loadTrace(idx, endpoint, target);
-        };
-
-        btn.onmouseover = function () {
-            this.style.transform = 'translateY(-1px)';
-            this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
-        };
-        btn.onmouseout = function () {
-            this.style.transform = 'translateY(0)';
-            this.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-        };
+        btn.onclick = function () { loadTrace(idx, endpoint, target); };
+        btn.onmouseover = function () { this.style.transform = 'translateY(-1px)'; this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)'; };
+        btn.onmouseout = function () { this.style.transform = 'translateY(0)'; this.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)'; };
     }
 
     function setupHist(idx, endpoint, target, serverName) {
         var btn = document.getElementById('hist-' + idx);
         var box = document.getElementById('histbox-' + idx);
         if (!btn || !box) return;
-
         btn.onclick = function () {
             if (box.style.display === 'none') {
                 box.style.display = 'block';
                 box.innerHTML = '<p style="color:#6c757d;font-size:12px;text-align:center;padding:20px;">⏳ Loading history...</p>';
                 btn.innerHTML = '🔼 Hide History';
                 btn.style.background = 'linear-gradient(135deg, #495057 0%, #343a40 100%)';
-
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', endpoint + '?target=' + encodeURIComponent(target) + '&history=1');
                 xhr.onload = function () {
@@ -227,26 +217,14 @@
                         html += '<div id="histcontent-' + idx + '" style="max-height:400px;overflow:auto;">' + xhr.responseText + '</div>';
                         html += '</div>';
                         box.innerHTML = html;
-                    } else {
-                        box.innerHTML = '<p style="color:#dc3545;font-size:12px;text-align:center;padding:20px;">❌ No history available</p>';
-                    }
+                    } else { box.innerHTML = '<p style="color:#dc3545;">❌ No history</p>'; }
                 };
-                xhr.onerror = function () { box.innerHTML = '<p style="color:#dc3545;font-size:12px;text-align:center;">❌ Connection error</p>'; };
                 xhr.send();
             } else {
                 box.style.display = 'none';
                 btn.innerHTML = '📋 View History';
                 btn.style.background = 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)';
             }
-        };
-
-        btn.onmouseover = function () {
-            this.style.transform = 'translateY(-1px)';
-            this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
-        };
-        btn.onmouseout = function () {
-            this.style.transform = 'translateY(0)';
-            this.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
         };
     }
 
