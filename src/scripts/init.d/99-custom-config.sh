@@ -165,4 +165,13 @@ if ! grep -q "custom-colors.css" /etc/smokeping/basepage.html; then
     sed -i 's|</head>|<link rel="stylesheet" href="/smokeping/css/custom-colors.css">\n</head>|' /etc/smokeping/basepage.html
 fi
 
+# --- 5. Fix Permissions ---
+echo "[custom-init] Fixing permissions..."
+PUID=${PUID:-1000}
+PGID=${PGID:-1000}
+chown -R $PUID:$PGID /config /data /usr/share/webapps/smokeping
+# Ensure cache dir exists and is writable
+mkdir -p /var/cache/smokeping
+chown -R $PUID:$PGID /var/cache/smokeping
+
 echo "[custom-init] Configuration complete."

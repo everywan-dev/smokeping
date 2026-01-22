@@ -166,5 +166,27 @@ docker push sistemasminorisa/smokeping:latest
 docker push sistemasminorisa/smokeping:2.9.0
 ```
 
+## 🔧 Troubleshooting & Permissions
+
+If graphs are not appearing or data is not persisting, it is likely a **Permissions Issue**.
+
+The container runs as user **1000:1000** by default. Ensure your host directories have the correct ownership:
+
+```bash
+# Correct permissions for mapped volumes
+chown -R 1000:1000 ./data
+chown -R 1000:1000 ./config
+chown -R 1000:1000 ./logs
+```
+
+If you need to run as a different user (e.g. root or a specific service account), modify `PUID` and `PGID` in `.env`:
+
+```ini
+PUID=1001
+PGID=1001
+```
+
+---
+
 ## 📜 License
 MIT License. See `LICENSE` file for details.
