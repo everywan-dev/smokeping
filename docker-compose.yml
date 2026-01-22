@@ -8,15 +8,15 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      # Panel de control (opcional, protegido o solo local)
+      # Dashboard (optional, secure it or keep local only)
       # - "8080:8080" 
     environment:
       - CF_API_EMAIL=${ACME_EMAIL}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik-data/acme.json:/acme.json # Guardar certificados
+      - ./traefik-data/acme.json:/acme.json # Store certificates
     command:
-      - "--api.dashboard=false" # Dashboard desactivado por seguridad por defecto
+      - "--api.dashboard=false" # Dashboard disabled by default for security
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
@@ -52,20 +52,20 @@ services:
     labels:
       - "traefik.enable=true"
       
-      # --- Router 1: Web Interface (Puerto 80) ---
-      # Redirigir /smokeping a /smokeping/ (Middleware)
+      # --- Router 1: Web Interface (Port 80) ---
+      # Redirect /smokeping to /smokeping/ (Middleware)
       - "traefik.http.middlewares.add-slash.redirectregex.regex=^https?://([^/]+)/smokeping$$"
       - "traefik.http.middlewares.add-slash.redirectregex.replacement=https://$${1}/smokeping/"
       
-      # Regla principal: Todo menos el traceroute CGI va al servicio web en puerto 80
+      # Main Rule: Everything except traceping.cgi goes to web service on port 80
       - "traefik.http.routers.smokeping-web.rule=Host(`${DOMAIN}`) && !Path(`/smokeping/traceping.cgi`)"
       - "traefik.http.routers.smokeping-web.entrypoints=websecure"
       - "traefik.http.routers.smokeping-web.tls.certresolver=le"
       - "traefik.http.routers.smokeping-web.middlewares=add-slash"
       - "traefik.http.services.smokeping-web.loadbalancer.server.port=80"
       
-      # --- Router 2: Traceroute Backend (Puerto 9000) ---
-      # Enviar peticiones específicas de traceping.cgi al puerto 9000
+      # --- Router 2: Traceroute Backend (Port 9000) ---
+      # Send specific traceping.cgi requests to port 9000
       - "traefik.http.routers.smokeping-trace.rule=Host(`${DOMAIN}`) && Path(`/smokeping/traceping.cgi`)"
       - "traefik.http.routers.smokeping-trace.entrypoints=websecure"
       - "traefik.http.routers.smokeping-trace.tls.certresolver=le"
