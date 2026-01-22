@@ -1,27 +1,22 @@
 (function () {
     // Traceroute Integration for SmokePing
-    // Dynamically injects a panel with traceroute results based on the target
     var servers = [];
 
     function init() {
         var target = getParam('target');
-        // Only run if we are in a detail view (target is present) and not in special views
+        // Filter out undesired views
         if (!target || target.indexOf('~') !== -1 || target === '_charts') return;
 
-        // Detect current hostname
-        var hostname = 'smokeping-master';
-
-        // Find existing panels to determine injection point
-        var panels = document.querySelectorAll('.panel, .panel-no-border');
         var insertAfterPanel = null;
+        var insertPosition = 'after'; // 'after' (sibling) or 'append' (child)
 
-        // Loop using for loop to allow breaking on first match
+        // STRATEGY 1: Look for Panels (Standard View with 3h, 30h... graphs)
+        var panels = document.querySelectorAll('.panel, .panel-no-border');
         for (var i = 0; i < panels.length; i++) {
             var panel = panels[i];
             var h2 = panel.querySelector('.panel-heading h2, .panel-heading-no-border h2');
             if (h2) {
                 var txt = h2.textContent;
-                // Look for "Last 3 Hours from HOSTNAME"
                 var m = txt.match(/from (.+)/);
                 if (m) {
                     var sdt = m[1].trim();
@@ -33,34 +28,61 @@
                         });
                     }
                     insertAfterPanel = panel;
-                    // WARNING: Stop searching after the first graph (which is the 3 Hours one).
-                    // If we don't break, it keeps going and selects the last one (360 Days), putting traceroute at the bottom.
+                    // Stop at first graph (3 Hours)
                     break;
                 }
             }
         }
 
-        // Fallback if no server detected (use defaults)
+        // STRATEGY 2: Look for Zoom/Detail View (displaymode=n)
+        // In this view, there might be no panels, just a big <img> tag.
+        if (!insertAfterPanel) {
+            // Try to find the main graph image. 
+            // Usually mostly alone in a div or table cell.
+            var imgs = document.getElementsByTagName('img');
+            for (var i = 0; i < imgs.length; i++) {
+                var img = imgs[i];
+                // SmokePing RRD graphs are served via smokeping.cgi or contain typical dimensions
+                // Checking if src contains certain keywords or if it's large
+                if (img.src && (img.src.indexOf('smokeping.cgi') !== -1 || img.src.indexOf('RRD_') !== -1)) {
+                    // Check if it's the main graph (usually wider than icon)
+                    if (img.width > 300) {
+                        insertAfterPanel = img;
+                        // If we found server name before, good. If not, use generic.
+                        if (servers.length === 0) {
+                            servers.push({
+                                name: target, // Use target name as label
+                                endpoint: '/smokeping/traceping.cgi',
+                                host: target // In zoom view, we might not know the slave, assume master/target
+                            });
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Fallback checks
+        if (!insertAfterPanel && servers.length === 0) {
+            // Should we force insert at bottom?
+            // Let's rely on finding *something*.
+            return;
+        }
+
         if (servers.length === 0) {
             servers.push({
                 name: 'Master',
                 endpoint: '/smokeping/traceping.cgi',
                 host: 'smokeping-master'
             });
-            // Try to find any panel to insert after
-            if (!insertAfterPanel && panels.length > 0) {
-                insertAfterPanel = panels[0];
-            }
         }
 
-        if (!insertAfterPanel) return;
-
-        // Create Traceroute Panel
+        // Create Traceroute Panel UI
         var idx = 0;
         var s = servers[idx];
         var div = document.createElement('div');
         div.className = 'traceroute-panel';
-        div.style.cssText = 'margin:15px 0 25px 0;padding:18px;background:linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);border-radius:8px;border:1px solid #dee2e6;box-shadow:0 2px 4px rgba(0,0,0,0.05);';
+        div.style.cssText = 'margin:15px auto 25px auto;padding:18px;background:linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);border-radius:8px;border:1px solid #dee2e6;box-shadow:0 2px 4px rgba(0,0,0,0.05);max-width:95%;';
 
         div.innerHTML =
             '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">' +
@@ -77,7 +99,25 @@
             '</div>' +
             '<div id="histbox-' + idx + '" style="display:none;margin-top:16px;"></div>';
 
-        insertAfterPanel.parentNode.insertBefore(div, insertAfterPanel.nextSibling);
+        // Injection Logic
+        if (insertAfterPanel && insertAfterPanel.parentNode) {
+            // Check if we are inserting after a panel or an image inside a container
+            // If it's an image in Zoom view, sometimes it's inside a <TD> or <DIV>
+
+            // Try to find the closest block container to insert AFTER
+            var container = insertAfterPanel;
+            while (container.tagName === 'IMG' || container.tagName === 'A') {
+                container = container.parentNode;
+            }
+
+            // Insert after the container of the graph
+            if (container.parentNode) {
+                container.parentNode.insertBefore(div, container.nextSibling);
+            } else {
+                // Fallback
+                insertAfterPanel.parentNode.insertBefore(div, insertAfterPanel.nextSibling);
+            }
+        }
 
         loadTrace(idx, s.endpoint, target);
         setupHist(idx, s.endpoint, target, s.name);
@@ -102,11 +142,8 @@
         xhr.onload = function () {
             if (xhr.status === 200) {
                 var txt = xhr.responseText;
-                // Basic HTML stripping and extraction
                 var m = txt.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
                 var content = m ? m[1] : txt.replace(/<[^>]+>/g, '');
-
-                // Clean up excessive asterisks lines (limit to 3 consecutive failure lines)
                 var lines = content.split('\n');
                 var cleanLines = [];
                 var asteriskCount = 0;
