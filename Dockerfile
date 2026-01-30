@@ -29,7 +29,7 @@ COPY config/Probes /defaults/Probes
 COPY config/Presentation /defaults/Presentation
 COPY scripts/traceping-service-run /etc/services.d/traceping/run
 COPY scripts/traceping-server-run /etc/services.d/traceping-server/run
-COPY scripts/init.d/99-custom-config.sh /custom-cont-init.d/99-custom-config.sh
+COPY scripts/apply-config.sh /scripts/apply-config.sh
 
 # Create symlinks for production-compatible paths
 RUN ln -sf /usr/share/webapps/smokeping/js/scriptaculous /usr/share/webapps/smokeping/scriptaculous && \
@@ -53,18 +53,24 @@ RUN echo "Configuring Apache Proxy for traceping..." && \
 RUN rm /usr/share/webapps/smokeping/traceping.cgi && \
     dos2unix /etc/services.d/traceping/run \
     /etc/services.d/traceping-server/run \
-    /custom-cont-init.d/99-custom-config.sh \
     /opt/smokeping/traceping_daemon.pl \
     /opt/smokeping/traceping_server_simple.pl \
     /usr/share/webapps/smokeping/traceping.cgi.pl \
-    /etc/smokeping/basepage.html && \
-    chmod +x /etc/services.d/traceping/run \
+    /scripts/apply-config.sh \
+    /etc/smokeping/basepage.html
+
+# Fix CSS (force correct single line)
+RUN sed -i '/<style>/,/<\/style>/c\<style>\n#sidebar { background: {{SMOKEPING_COLOR_SIDEBAR_BG}} !important; }\n#sidebar .logo { background: transparent; }\n</style>' /etc/smokeping/basepage.html
+
+# Fix Permissions (Dedicated Layer)
+RUN chmod +x /etc/services.d/traceping/run \
     /etc/services.d/traceping-server/run \
-    /custom-cont-init.d/99-custom-config.sh \
+    /scripts/apply-config.sh \
     /opt/smokeping/traceping_daemon.pl \
     /opt/smokeping/traceping_server_simple.pl \
     /usr/share/webapps/smokeping/traceping.cgi.pl && \
-    chmod +x /opt/traceroute_history/*.sh 2>/dev/null || true
+    chmod +x /opt/traceroute_history/*.sh 2>/dev/null || true && \
+    ls -la /etc/services.d/traceping/run /scripts/apply-config.sh
 
 ENV TRACEPING_INTERVAL=300 \
     TRACEPING_RETENTION_DAYS=365 \

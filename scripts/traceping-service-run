@@ -8,6 +8,10 @@ CONFIG_DIR="/config"
 DATA_DIR="/data"
 
 echo "[traceping-s6] Starting traceping daemon..."
+echo "[traceping-s6] Attempting to apply custom config..."
+ls -la /scripts/apply-config.sh || echo "Script not found!"
+sh /scripts/apply-config.sh || echo "Failed to run script!"
+echo "[traceping-s6] Config application done."
 
 # ==============================================================================
 # Ensure Apache Proxy Configuration is Active
