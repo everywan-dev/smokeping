@@ -34,8 +34,8 @@ services:
       - SMOKEPING_BRAND_NAME=${SMOKEPING_BRAND_NAME:-My Company}
       # URL for the brand name link. Defaults to 'https://example.com'.
       - SMOKEPING_BRAND_URL=${SMOKEPING_BRAND_URL:-https://example.com}
-      # URL for the logo image. Defaults to 'images/smokeping.png'.
-      - SMOKEPING_LOGO_URL=${SMOKEPING_LOGO_URL:-images/smokeping.png}
+      # URL for the logo image. Defaults to 'https://example.com/logo.png'.
+      - SMOKEPING_LOGO_URL=${SMOKEPING_LOGO_URL:-https://example.com/logo.png}
       # Background color for the sidebar. Defaults to '#1a1a2e'.
       - SMOKEPING_COLOR_SIDEBAR_BG=${SMOKEPING_COLOR_SIDEBAR_BG:-#1a1a2e}
       

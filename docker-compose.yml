@@ -27,8 +27,8 @@ services:
       - SMOKEPING_BRAND_URL=${SMOKEPING_BRAND_URL:-https://example.com} # URL to your company website
       
       # --- Visual Customization ---
-      # URL to your logo (remote URL recommended, or local path relative to /usr/share/webapps/smokeping/)
-      - SMOKEPING_LOGO_URL=${SMOKEPING_LOGO_URL:-images/smokeping.png}
+      # URL to your logo (remote URL recommended)
+      - SMOKEPING_LOGO_URL=${SMOKEPING_LOGO_URL:-https://example.com/logo.png}
       - SMOKEPING_COLOR_SIDEBAR_BG=${SMOKEPING_COLOR_SIDEBAR_BG:-#1a1a2e} # Hex color for sidebar background
       
       # --- Traceroute Configuration ---
