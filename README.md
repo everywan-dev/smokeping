@@ -34,13 +34,22 @@ Run in a Swarm cluster exposing port 80 on the node.
 docker stack deploy -c docker-compose.swarm.yml smokeping
 ```
 
-### 3️⃣ Docker Swarm + Traefik (Recommended)
-Run behind a Traefik proxy with automatic SSL.
+### 3️⃣ Docker Swarm + Existing Traefik (Recommended)
+Run behind an *existing* Traefik proxy.
 - File: `docker-compose.traefik.yml`
 
 ```bash
 docker stack deploy -c docker-compose.traefik.yml smokeping
 ```
+
+### 4️⃣ Full Stack (Swarm + Traefik Included)
+Deploys both **Traefik v3** (latest) and Smokeping together. Ideal for fresh clusters.
+- File: `docker-compose.full-stack.yml`
+
+```bash
+docker stack deploy -c docker-compose.full-stack.yml monitor
+```
+*(Access Smokeping via http://localhost or any node IP)*
 
 ## ⚙️ Configuration (Environment Variables)
 
