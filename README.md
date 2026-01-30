@@ -14,33 +14,33 @@ Docker image de **SmokePing** con frontend personalizado, traceroute integrado y
 - ✅ **Docker Swarm Ready** - Despliegue simplificado con Traefik
 - ✅ **Cero configuración de código** - Todo el frontend reside en la imagen, solo persistencia de datos
 
-## 🚀 Despliegue Flexible
+## 🚀 Opciones de Despliegue
 
-El archivo `docker-compose.yml` está diseñado para funcionar en **cualquier escenario**. Por defecto viene configurado para despliegue directo (standalone), pero incluye secciones comentadas para Swarm y Traefik.
+Hemos preparado 3 configuraciones listas para usar según tu entorno:
 
-### Opción A: Standalone (Directo/Local)
-Para ejecutarlo directamente en un servidor con Docker y acceder por el puerto 80:
+### 1️⃣ Standalone (Local/Single Server)
+Para ejecutarlo directamente (`docker-compose up`) exponiendo el puerto 80.
+- Archivo: `docker-compose.yml`
 
 ```bash
 docker-compose up -d
-# Accede a http://tu-ip/smokeping/
 ```
 
-### Opción B: Docker Swarm (Sin Proxy)
-Para desplegar en un clúster Swarm y exponer el puerto 80 en el nodo:
+### 2️⃣ Docker Swarm (Básico)
+Para ejecutarlo en un clúster Swarm exponiendo el puerto 80 en el nodo.
+- Archivo: `docker-compose.swarm.yml`
 
 ```bash
-docker stack deploy -c docker-compose.yml smokeping
+docker stack deploy -c docker-compose.swarm.yml smokeping
 ```
 
-### Opción C: Docker Swarm + Traefik (Avanzado)
-Si tienes un balanceador Traefik en tu clúster:
+### 3️⃣ Docker Swarm + Traefik (Recomendado)
+Para ejecutarlo detrás de un proxy Traefik con SSL automático.
+- Archivo: `docker-compose.traefik.yml`
 
-1.  Edita `docker-compose.yml`.
-2.  **Comenta** la sección `ports:`.
-3.  **Descomenta** la sección `labels:` y ajusta el Host (`smokeping.example.com`).
-4.  **Descomenta** la red `traefik-public` al final del archivo.
-5.  Despliega: `docker stack deploy -c docker-compose.yml smokeping`
+```bash
+docker stack deploy -c docker-compose.traefik.yml smokeping
+```
 
 
 ## ⚙️ Configuración Detallada

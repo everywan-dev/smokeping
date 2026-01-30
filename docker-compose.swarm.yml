@@ -3,26 +3,19 @@ version: '3.8'
 services:
   smokeping:
     image: sistemasminorisa/smokeping:2.9.0
-    container_name: smokeping
-    hostname: ${SMOKEPING_HOSTNAME:-smokeping}
+    hostname: ${SMOKEPING_HOSTNAME:-smokeping-master}
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
       - TZ=${TZ:-Europe/Madrid}
-      
-      # Identidad
       - SMOKEPING_OWNER=${SMOKEPING_OWNER:-everyWAN NOC}
       - SMOKEPING_CONTACT=${SMOKEPING_CONTACT:-soporte@everywan.com}
-      - SMOKEPING_HOSTNAME=${SMOKEPING_HOSTNAME:-smokeping}
+      - SMOKEPING_HOSTNAME=${SMOKEPING_HOSTNAME:-smokeping-master}
       - SMOKEPING_TITLE=${SMOKEPING_TITLE:-everyWAN Network Monitor}
-      
-      # Branding
       - SMOKEPING_BRAND_NAME=${SMOKEPING_BRAND_NAME:-everyWAN}
       - SMOKEPING_BRAND_URL=${SMOKEPING_BRAND_URL:-https://everywan.com}
       - SMOKEPING_LOGO_URL=${SMOKEPING_LOGO_URL:-https://as33932.net/logos/svg_blanco.svg}
       - SMOKEPING_COLOR_SIDEBAR_BG=#233350
-      
-      # Config
       - TRACEPING_INTERVAL=${TRACEPING_INTERVAL:-300}
       - TRACEPING_RETENTION_DAYS=${TRACEPING_RETENTION_DAYS:-365}
       
@@ -34,8 +27,17 @@ services:
       - "80:80"
       
     volumes:
-      - ./config:/config
-      - ./data:/data
-      - ./logs:/logs
+      - /mnt/ceph/swarm/smokeping/config:/config
+      - /mnt/ceph/swarm/smokeping/data:/data
+      - /mnt/ceph/swarm/smokeping/logs:/logs
       
-    restart: unless-stopped
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
