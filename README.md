@@ -3,61 +3,43 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/sistemasminorisa/smokeping.svg)](https://hub.docker.com/r/sistemasminorisa/smokeping)
 [![Docker Image](https://img.shields.io/badge/docker-image-blue.svg)](https://hub.docker.com/r/sistemasminorisa/smokeping)
 
-Docker image de **SmokePing** con frontend personalizado y funcionalidad de traceroute integrada. Basado en [linuxserver/smokeping](https://hub.docker.com/r/linuxserver/smokeping) y [SmokePing](https://oss.oetiker.ch/smokeping/) por Tobi Oetiker.
+Docker image de **SmokePing** con frontend personalizado, traceroute integrado y soporte para Docker Swarm. Basado en [linuxserver/smokeping](https://hub.docker.com/r/linuxserver/smokeping).
 
 ## 🎯 Características
 
 - ✅ **SmokePing 2.9.0** - Última versión estable
 - ✅ **Frontend moderno** - Interfaz personalizada y responsive
-- ✅ **Traceroute integrado** - Panel de traceroute en vivo en Navigator y vista de targets
-- ✅ **Historial de traceroute** - Almacenamiento SQLite con búsqueda por fecha/hora
-- ✅ **Logo configurable** - Personaliza tu logo fácilmente
-- ✅ **Hostname configurable** - Personaliza el nombre en los gráficos
-- ✅ **Fácil instalación** - Un solo comando con docker-compose
-- ✅ **Configuración mediante .env** - Variables de entorno simples
+- ✅ **Traceroute integrado** - Panel de traceroute en vivo vía API interna
+- ✅ **Personalización Total** - Logo, colores y branding configurables vía variables de entorno
+- ✅ **Docker Swarm Ready** - Despliegue simplificado con Traefik
+- ✅ **Cero configuración de código** - Todo el frontend reside en la imagen, solo persistencia de datos
 
-## 🚀 Instalación Rápida
+## 🚀 Instalación Rápida (Swarm)
 
-### Prerrequisitos
+Solo necesitas el archivo `docker-compose.swarm.yml` y tus volúmenes de datos.
 
-- Docker
-- Docker Compose
+1.  **Descargar el compose:**
+    ```bash
+    wget https://raw.githubusercontent.com/everywan-dev/smokeping/main/docker-compose.swarm.yml
+    ```
 
-### Pasos
+2.  **Desplegar el Stack:**
+    ```bash
+    docker stack deploy -c docker-compose.swarm.yml smokeping
+    ```
 
-1. **Clonar el repositorio:**
-```bash
-git clone https://github.com/everywan-dev/smokeping.git
-cd smokeping
-```
+## ⚙️ Configuración (Environment Variables)
 
-2. **Configurar variables de entorno (Opcional):**
-```bash
-cp .env.example .env
-# Edita .env con tus valores personalizados
-nano .env
-```
+Puedes personalizar todo directamente en el archivo compose:
 
-3. **Iniciar el servicio:**
+| Variable | Descripción | Ejemplo |
+|----------|-------------|---------|
+| `SMOKEPING_LOGO_URL` | URL del logo (remoto o local) | `https://midominio.com/logo.svg` |
+| `SMOKEPING_COLOR_SIDEBAR_BG` | Color de fondo de la barra lateral | `#233350` |
+| `SMOKEPING_BRAND_NAME` | Nombre de la marca en footer | `Mi Empresa` |
+| `SMOKEPING_BRAND_URL` | Enlace de la marca | `https://miempresa.com` |
+| `TRACEPING_INTERVAL` | Frecuencia de traceroute (segundos) | `300` |
 
-   **Opción A: Con Nginx (desarrollo/local)**
-   ```bash
-   docker-compose up -d
-   # o
-   docker-compose -f docker-compose.nginx.yml up -d
-   ```
-
-   **Opción B: Con Traefik + Swarm (producción)**
-   ```bash
-   # Edita las variables en docker-compose.swarm.yml o usa .env
-   docker stack deploy -c docker-compose.swarm.yml smokeping
-   ```
-
-4. **Acceder a la interfaz:**
-   - Con Nginx: `http://localhost:8080/smokeping/`
-   - Con Traefik: `https://tu-dominio.com/smokeping/`
-
-¡Listo! 🎉
 
 ## ⚙️ Configuración Detallada
 
@@ -134,50 +116,14 @@ SMOKEPING_TITLE=Acme Network Monitoring
 
 #### Personalizar Logo
 
-##### Paso 1: Preparar tu logo
-
-Tu logo debe estar en formato **SVG, PNG o JPG**. Recomendamos SVG para mejor calidad.
-
-**Tamaño recomendado:** El logo se ajusta automáticamente a 140x140px, pero recomendamos:
-- **SVG**: Cualquier tamaño (se escala automáticamente)
-- **PNG/JPG**: Mínimo 280x280px para buena calidad
-
-##### Paso 2: Colocar el logo en el proyecto
-
-Coloca tu logo en la carpeta `frontend/images/`:
+Simplemente define la URL de tu logo en las variables de entorno:
 
 ```bash
-# Ejemplo: copiar tu logo
-cp /ruta/a/tu/logo.svg frontend/images/mi-logo.svg
+SMOKEPING_LOGO_URL=https://mi-dominio.com/logo.svg
 ```
 
-##### Paso 3: Configurar en .env
+También puedes usar una ruta local si montas el volumen correspondiente, pero recomendamos usar una URL externa para mayor facilidad en Swarm.
 
-Edita `.env` y cambia `SMOKEPING_LOGO_URL`:
-
-```bash
-SMOKEPING_LOGO_URL=images/mi-logo.svg
-```
-
-**Nota importante:** La ruta es relativa a `/usr/share/webapps/smokeping/` dentro del contenedor. Si colocas el logo en `frontend/images/`, la ruta será `images/nombre-del-archivo`.
-
-##### Paso 4: Reiniciar el contenedor
-
-```bash
-docker-compose restart
-```
-
-**Ejemplo completo:**
-```bash
-# 1. Copiar logo
-cp ~/Downloads/logo-empresa.svg frontend/images/logo-empresa.svg
-
-# 2. Editar .env
-SMOKEPING_LOGO_URL=images/logo-empresa.svg
-
-# 3. Reiniciar
-docker-compose restart
-```
 
 #### Personalizar Hostname en Gráficos
 

@@ -16,12 +16,11 @@ RUN apk add --no-cache \
     bash
 
 RUN mkdir -p /opt/traceroute_history /opt/smokeping/lib
-
-COPY traceroute_history/ /opt/traceroute_history/
-COPY traceping_daemon.pl /opt/smokeping/traceping_daemon.pl
-COPY traceping_server_simple.pl /opt/smokeping/traceping_server_simple.pl
-COPY traceping.cgi /usr/share/webapps/smokeping/traceping.cgi
-COPY traceping.cgi.pl /usr/share/webapps/smokeping/traceping.cgi.pl
+# Copy Traceping scripts from src/
+COPY src/traceping.cgi /usr/share/webapps/smokeping/traceping.cgi
+COPY src/traceping.cgi.pl /usr/share/webapps/smokeping/traceping.cgi.pl
+COPY src/traceping_daemon.pl /opt/smokeping/traceping_daemon.pl
+COPY src/traceping_server_simple.pl /opt/smokeping/traceping_server_simple.pl
 COPY frontend/ /usr/share/webapps/smokeping/
 COPY frontend/basepage.html /etc/smokeping/basepage.html
 COPY config/Targets /defaults/Targets
