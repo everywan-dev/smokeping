@@ -24,7 +24,6 @@ services:
       # Personalización Visual
       - SMOKEPING_BRAND_NAME=${SMOKEPING_BRAND_NAME:-everyWAN}
       - SMOKEPING_BRAND_URL=${SMOKEPING_BRAND_URL:-https://everywan.com}
-      # URL del logo (remoto o local)
       - SMOKEPING_LOGO_URL=${SMOKEPING_LOGO_URL:-https://as33932.net/logos/svg_blanco.svg}
       - SMOKEPING_COLOR_SIDEBAR_BG=#233350
       
@@ -36,16 +35,22 @@ services:
     cap_add:
       - NET_RAW
       - NET_ADMIN
-    
+      
     volumes:
-      # Solo persistimos configuración y datos. El código va en la imagen.
-      - /mnt/ceph/swarm/smokeping/config:/config
-      - /mnt/ceph/swarm/smokeping/data:/data
-      - /mnt/ceph/swarm/smokeping/logs:/logs
-    
-    networks:
-      - traefik-public
+      - ./config:/config
+      - ./data:/data
+      - ./logs:/logs
 
+    # --------------------------------------------------------------------------
+    # MODO 1: STANDALONE O SWARM SIN PROXY (Directo al puerto 80)
+    # --------------------------------------------------------------------------
+    # Descomenta esto si NO usas Traefik y quieres acceder directo por IP:Puerto
+    ports:
+      - "80:80"
+
+    # --------------------------------------------------------------------------
+    # MODO 2: DEPLOY CONFIG (SWARM)
+    # --------------------------------------------------------------------------
     deploy:
       mode: replicated
       replicas: 1
@@ -56,19 +61,25 @@ services:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-      labels:
-        - "traefik.enable=true"
-        # Router único para TODO (UI + Traceroute) via Puerto 80
-        - "traefik.http.routers.smokeping.rule=Host(`smokeping.everywan.com`)"
-        - "traefik.http.routers.smokeping.entrypoints=websecure"
-        - "traefik.http.routers.smokeping.tls=true"
-        - "traefik.http.routers.smokeping.tls.certresolver=leresolver"
-        - "traefik.http.routers.smokeping.service=smokeping-svc"
-        - "traefik.http.services.smokeping-svc.loadbalancer.server.port=80"
-        # Redireccionar traceroutes viejos si existieran
-        - "traefik.http.middlewares.smokeping-slash.redirectregex.regex=^https?://([^/]+)/smokeping$$"
-        - "traefik.http.middlewares.smokeping-slash.redirectregex.replacement=https://$${1}/smokeping/"
+      
+      # ------------------------------------------------------------------------
+      # CONFIGURACIÓN TRAEFIK (Opcional - Descomentar para activar)
+      # ------------------------------------------------------------------------
+      # labels:
+      #   - "traefik.enable=true"
+      #   - "traefik.http.routers.smokeping.rule=Host(`smokeping.example.com`)"
+      #   - "traefik.http.routers.smokeping.entrypoints=websecure"
+      #   - "traefik.http.routers.smokeping.tls=true"
+      #   - "traefik.http.routers.smokeping.service=smokeping-svc"
+      #   - "traefik.http.services.smokeping-svc.loadbalancer.server.port=80"
+      #   # Middleware para redirección slash
+      #   - "traefik.http.middlewares.smokeping-slash.redirectregex.regex=^https?://([^/]+)/smokeping$$"
+      #   - "traefik.http.middlewares.smokeping-slash.redirectregex.replacement=https://$${1}/smokeping/"
+      #   - "traefik.http.routers.smokeping.middlewares=smokeping-slash"
 
-networks:
-  traefik-public:
-    external: true
+    # networks:
+    #   - traefik-public
+
+# networks:
+#   traefik-public:
+#     external: true

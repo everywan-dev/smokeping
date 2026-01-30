@@ -14,31 +14,33 @@ Docker image de **SmokePing** con frontend personalizado, traceroute integrado y
 - ✅ **Docker Swarm Ready** - Despliegue simplificado con Traefik
 - ✅ **Cero configuración de código** - Todo el frontend reside en la imagen, solo persistencia de datos
 
-## 🚀 Instalación Rápida (Swarm)
+## 🚀 Despliegue Flexible
 
-Solo necesitas el archivo `docker-compose.yml` y tus volúmenes de datos.
+El archivo `docker-compose.yml` está diseñado para funcionar en **cualquier escenario**. Por defecto viene configurado para despliegue directo (standalone), pero incluye secciones comentadas para Swarm y Traefik.
 
-1.  **Descargar el compose:**
-    ```bash
-    wget https://raw.githubusercontent.com/everywan-dev/smokeping/main/docker-compose.yml
-    ```
+### Opción A: Standalone (Directo/Local)
+Para ejecutarlo directamente en un servidor con Docker y acceder por el puerto 80:
 
-2.  **Desplegar el Stack:**
-    ```bash
-    docker stack deploy -c docker-compose.yml smokeping
-    ```
+```bash
+docker-compose up -d
+# Accede a http://tu-ip/smokeping/
+```
 
-## ⚙️ Configuración (Environment Variables)
+### Opción B: Docker Swarm (Sin Proxy)
+Para desplegar en un clúster Swarm y exponer el puerto 80 en el nodo:
 
-Puedes personalizar todo directamente en el archivo compose:
+```bash
+docker stack deploy -c docker-compose.yml smokeping
+```
 
-| Variable | Descripción | Ejemplo |
-|----------|-------------|---------|
-| `SMOKEPING_LOGO_URL` | URL del logo (remoto o local) | `https://midominio.com/logo.svg` |
-| `SMOKEPING_COLOR_SIDEBAR_BG` | Color de fondo de la barra lateral | `#233350` |
-| `SMOKEPING_BRAND_NAME` | Nombre de la marca en footer | `Mi Empresa` |
-| `SMOKEPING_BRAND_URL` | Enlace de la marca | `https://miempresa.com` |
-| `TRACEPING_INTERVAL` | Frecuencia de traceroute (segundos) | `300` |
+### Opción C: Docker Swarm + Traefik (Avanzado)
+Si tienes un balanceador Traefik en tu clúster:
+
+1.  Edita `docker-compose.yml`.
+2.  **Comenta** la sección `ports:`.
+3.  **Descomenta** la sección `labels:` y ajusta el Host (`smokeping.example.com`).
+4.  **Descomenta** la red `traefik-public` al final del archivo.
+5.  Despliega: `docker stack deploy -c docker-compose.yml smokeping`
 
 
 ## ⚙️ Configuración Detallada
