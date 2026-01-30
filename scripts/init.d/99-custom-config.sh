@@ -1,20 +1,31 @@
 #!/bin/sh
 
-# Copiar configuración personalizada
-cp -f /defaults/Targets /config/Targets
-cp -f /defaults/Probes /config/Probes
+# ==============================================================================
+# SmokePing Custom Configuration Script
+# ==============================================================================
+# Uses awk instead of sed to avoid issues with special characters in URLs
 
-# Copiar basepage personalizado (prioridad: frontend personalizado > default)
+echo "[custom-init] Applying custom configuration..."
+
+# Copiar configuración personalizada si existen
+[ -f /defaults/Targets ] && cp -f /defaults/Targets /config/Targets
+[ -f /defaults/Probes ] && cp -f /defaults/Probes /config/Probes
+[ -f /defaults/Presentation ] && cp -f /defaults/Presentation /config/Presentation
+
+# Copiar basepage personalizado
 if [ -f /usr/share/webapps/smokeping/basepage.html ]; then
     cp -f /usr/share/webapps/smokeping/basepage.html /etc/smokeping/basepage.html
 elif [ -f /usr/share/smokeping/www/basepage.html ]; then
     cp -f /usr/share/smokeping/www/basepage.html /etc/smokeping/basepage.html
 fi
 
+# Configurar logo URL (usando awk para evitar problemas con /)
 LOGO_URL=${SMOKEPING_LOGO_URL:-'images/logo.svg'}
-sed -i "s|{{SMOKEPING_LOGO_URL}}|$LOGO_URL|g" /etc/smokeping/basepage.html
+if [ -f /etc/smokeping/basepage.html ]; then
+    awk -v logo="$LOGO_URL" '{gsub(/\{\{SMOKEPING_LOGO_URL\}\}/, logo)}1' /etc/smokeping/basepage.html > /tmp/basepage.tmp && mv /tmp/basepage.tmp /etc/smokeping/basepage.html
+fi
 
-# Configurar marca en footer (configurable)
+# Configurar marca en footer (usando awk para evitar problemas con URLs)
 BRAND_NAME=${SMOKEPING_BRAND_NAME:-''}
 BRAND_URL=${SMOKEPING_BRAND_URL:-''}
 if [ -n "$BRAND_NAME" ] && [ -n "$BRAND_URL" ]; then
@@ -22,32 +33,57 @@ if [ -n "$BRAND_NAME" ] && [ -n "$BRAND_URL" ]; then
 else
     BRAND_FOOTER=""
 fi
-sed -i "s|{{BRAND_FOOTER}}|$BRAND_FOOTER|g" /etc/smokeping/basepage.html
 
-# Configurar General
-if [ -f /config/General ]; then
-    sed -i "s|^owner.*|owner    = ${SMOKEPING_OWNER}|g" /config/General
-    sed -i "s|^contact.*|contact  = ${SMOKEPING_CONTACT}|g" /config/General
+if [ -f /etc/smokeping/basepage.html ]; then
+    awk -v footer="$BRAND_FOOTER" '{gsub(/\{\{BRAND_FOOTER\}\}/, footer)}1' /etc/smokeping/basepage.html > /tmp/basepage.tmp && mv /tmp/basepage.tmp /etc/smokeping/basepage.html
 fi
 
+# Configurar General (owner, contact) usando awk
+if [ -f /config/General ]; then
+    OWNER="${SMOKEPING_OWNER:-SmokePing Admin}"
+    CONTACT="${SMOKEPING_CONTACT:-admin@example.com}"
+    
+    awk -v owner="$OWNER" '/^owner/ {$0 = "owner    = " owner} 1' /config/General > /tmp/General.tmp && mv /tmp/General.tmp /config/General
+    awk -v contact="$CONTACT" '/^contact/ {$0 = "contact  = " contact} 1' /config/General > /tmp/General.tmp && mv /tmp/General.tmp /config/General
+fi
 
-
-echo "Custom configuration applied."
+echo "[custom-init] Custom configuration applied."
 
 # Configurar hostname para gráficos
 SMOKEPING_HOSTNAME=${SMOKEPING_HOSTNAME:-smokeping-master}
-if [ -f /config/General ]; then
-    # El hostname se usa en los títulos de los gráficos
-    # Se puede configurar en General si es necesario
-    echo "Hostname configurado: $SMOKEPING_HOSTNAME"
-fi
+echo "[custom-init] Hostname: $SMOKEPING_HOSTNAME"
 
-# Configurar display_name (hostname para gráficos)
-SMOKEPING_HOSTNAME=${SMOKEPING_HOSTNAME:-smokeping-master}
 if [ -f /config/General ]; then
     if grep -q '^display_name' /config/General; then
-        sed -i "s|^display_name.*|display_name = $SMOKEPING_HOSTNAME|g" /config/General
+        awk -v hn="$SMOKEPING_HOSTNAME" '/^display_name/ {$0 = "display_name = " hn} 1' /config/General > /tmp/General.tmp && mv /tmp/General.tmp /config/General
     else
         echo "display_name = $SMOKEPING_HOSTNAME" >> /config/General
     fi
 fi
+
+
+# ==============================================================================
+# Inject High-Priority Apache Configuration for Traceping Proxy
+# ==============================================================================
+# We create 00-traceping.conf in /config/site-confs/ so it loads BEFORE
+# smokeping.conf (alphabetic order). This ensures our ProxyPass matches
+# before the conflicting Alias /smokeping in smokeping.conf.
+
+echo "[custom-init] Injecting Apache Proxy configuration..."
+mkdir -p /config/site-confs
+cat > /config/site-confs/00-traceping.conf << 'EOF'
+# TracePing Proxy Configuration
+# Loaded via IncludeOptional /config/site-confs/*.conf
+# Loads FIRST to override Alias directives in smokeping.conf
+
+LoadModule proxy_module modules/mod_proxy.so
+LoadModule proxy_http_module modules/mod_proxy_http.so
+
+<Location /smokeping/traceping.cgi>
+    SetHandler None
+    ProxyPass http://127.0.0.1:9000/smokeping/traceping.cgi
+    ProxyPassReverse http://127.0.0.1:9000/smokeping/traceping.cgi
+</Location>
+EOF
+
+echo "[custom-init] Configuration complete."

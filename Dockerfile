@@ -11,7 +11,9 @@ RUN apk add --no-cache \
     dos2unix \
     perl-dbi \
     perl-dbd-sqlite \
-    perl-cgi
+    perl-cgi \
+    apache2-proxy \
+    bash
 
 RUN mkdir -p /opt/traceroute_history /opt/smokeping/lib
 
@@ -24,29 +26,43 @@ COPY frontend/ /usr/share/webapps/smokeping/
 COPY frontend/basepage.html /etc/smokeping/basepage.html
 COPY config/Targets /defaults/Targets
 COPY config/Probes /defaults/Probes
+COPY config/Presentation /defaults/Presentation
+COPY scripts/traceping-service-run /etc/services.d/traceping/run
+COPY scripts/traceping-server-run /etc/services.d/traceping-server/run
 COPY scripts/init.d/99-custom-config.sh /custom-cont-init.d/99-custom-config.sh
-COPY scripts/init.d/99-start-traceping-daemon.sh /custom-cont-init.d/99-start-traceping-daemon.sh
-COPY scripts/init.d/99-start-traceping-server.sh /custom-cont-init.d/99-start-traceping-server.sh
 
 # Create symlinks for production-compatible paths
 RUN ln -sf /usr/share/webapps/smokeping/js/scriptaculous /usr/share/webapps/smokeping/scriptaculous && \
     ln -sf /usr/share/webapps/smokeping/js/cropper /usr/share/webapps/smokeping/cropper && \
     ln -sf /usr/share/webapps/smokeping/js/smokeping.js /usr/share/webapps/smokeping/smokeping-zoom.js
 
-RUN dos2unix /custom-cont-init.d/99-custom-config.sh \
-    /custom-cont-init.d/99-start-traceping-daemon.sh \
-    /custom-cont-init.d/99-start-traceping-server.sh \
+# Configure Apache Proxy for traceping
+# We continue to create the config file here, but the Include
+# is injected at runtime by traceping-service-run into site-confs/smokeping.conf
+RUN echo "Configuring Apache Proxy for traceping..." && \
+    echo 'LoadModule proxy_module modules/mod_proxy.so' > /etc/apache2/conf.d/proxy_load.conf && \
+    echo 'LoadModule proxy_http_module modules/mod_proxy_http.so' >> /etc/apache2/conf.d/proxy_load.conf && \
+    echo '<Location /smokeping/traceping.cgi>' > /etc/apache2/conf.d/traceping.conf && \
+    echo '    SetHandler None' >> /etc/apache2/conf.d/traceping.conf && \
+    echo '    ProxyPass http://127.0.0.1:9000/smokeping/traceping.cgi' >> /etc/apache2/conf.d/traceping.conf && \
+    echo '    ProxyPassReverse http://127.0.0.1:9000/smokeping/traceping.cgi' >> /etc/apache2/conf.d/traceping.conf && \
+    echo '</Location>' >> /etc/apache2/conf.d/traceping.conf
+
+# Final permissions and cleanup
+# IMPORTANT: Remove traceping.cgi wrapper so mod_fcgid does not intercept requests
+RUN rm /usr/share/webapps/smokeping/traceping.cgi && \
+    dos2unix /etc/services.d/traceping/run \
+    /etc/services.d/traceping-server/run \
+    /custom-cont-init.d/99-custom-config.sh \
     /opt/smokeping/traceping_daemon.pl \
     /opt/smokeping/traceping_server_simple.pl \
-    /usr/share/webapps/smokeping/traceping.cgi \
     /usr/share/webapps/smokeping/traceping.cgi.pl \
     /etc/smokeping/basepage.html && \
-    chmod 755 /custom-cont-init.d/99-custom-config.sh \
-    /custom-cont-init.d/99-start-traceping-daemon.sh \
-    /custom-cont-init.d/99-start-traceping-server.sh \
+    chmod +x /etc/services.d/traceping/run \
+    /etc/services.d/traceping-server/run \
+    /custom-cont-init.d/99-custom-config.sh \
     /opt/smokeping/traceping_daemon.pl \
     /opt/smokeping/traceping_server_simple.pl \
-    /usr/share/webapps/smokeping/traceping.cgi \
     /usr/share/webapps/smokeping/traceping.cgi.pl && \
     chmod +x /opt/traceroute_history/*.sh 2>/dev/null || true
 

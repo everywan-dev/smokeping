@@ -1,0 +1,8 @@
+#!/usr/bin/with-contenv bash
+
+# S6 run script for traceping server
+# This runs the Perl HTTP server on port 9000
+
+echo "[traceping-server-s6] Starting traceping server on port ${TRACEPING_PORT:-9000}..."
+
+exec /opt/smokeping/traceping_server_simple.pl

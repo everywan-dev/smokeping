@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Iniciar servidor Perl para traceping
 echo "Starting TracePing server on port ${TRACEPING_PORT:-9000}..."

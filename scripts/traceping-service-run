@@ -1,0 +1,49 @@
+#!/usr/bin/with-contenv bash
+
+# S6 run script for traceping daemon
+# This ensures the daemon is supervised and restarted if it crashes
+
+# Extract configuration
+CONFIG_DIR="/config"
+DATA_DIR="/data"
+
+echo "[traceping-s6] Starting traceping daemon..."
+
+# ==============================================================================
+# Ensure Apache Proxy Configuration is Active
+# ==============================================================================
+# The linuxserver image resets httpd.conf and uses /config/site-confs/smokeping.conf
+# We must inject our Include directive there to load our traceping.conf
+
+SMOKEPING_CONF="/config/site-confs/smokeping.conf"
+INCLUDE_CMD="IncludeOptional /etc/apache2/conf.d/*.conf"
+
+if [ -f "$SMOKEPING_CONF" ]; then
+    if ! grep -qF "$INCLUDE_CMD" "$SMOKEPING_CONF"; then
+        echo "[traceping-s6] Injecting Apache Proxy configuration into $SMOKEPING_CONF..."
+        # Insert at the top to ensure priority over aliases
+        sed -i "1i $INCLUDE_CMD" "$SMOKEPING_CONF"
+        
+        # Reload Apache if running (S6 service name usually svc-apache)
+        # We try graceful restart using apachectl just in case
+        if pgrep httpd >/dev/null; then
+            echo "[traceping-s6] Reloading Apache..."
+            apachectl -k graceful || true
+        fi
+    fi
+else
+    echo "[traceping-s6] WARNING: $SMOKEPING_CONF not found!"
+fi
+
+# Ensure database directory exists
+mkdir -p "$DATA_DIR"
+touch "$DATA_DIR/traceping.sqlite"
+chmod 666 "$DATA_DIR/traceping.sqlite"
+chown abc:abc "$DATA_DIR/traceping.sqlite"
+
+# Wait for database to be somewhat ready (optional)
+sleep 2
+
+# Run the daemon
+# Redirect stderr to stdout for s6-log catching
+exec /opt/smokeping/traceping_daemon.pl
