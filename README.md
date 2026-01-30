@@ -1,15 +1,16 @@
-# SmokePing Docker - Custom Frontend & Integrated Traceroute
+# SmokePing Docker - Custom Frontend, Traceroute & Telegram Alerts
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/sistemasminorisa/smokeping.svg)](https://hub.docker.com/r/sistemasminorisa/smokeping)
 [![Docker Image](https://img.shields.io/badge/docker-image-blue.svg)](https://hub.docker.com/r/sistemasminorisa/smokeping)
 
-**SmokePing** Docker image featuring a modern custom frontend, integrated traceroute functionality, and Docker Swarm support. Based on [linuxserver/smokeping](https://hub.docker.com/r/linuxserver/smokeping).
+**SmokePing** Docker image featuring a modern custom frontend, integrated **Traceroute**, and native **Telegram Alerts**. Based on [linuxserver/smokeping](https://hub.docker.com/r/linuxserver/smokeping).
 
 ## 🎯 Features
 
 - ✅ **SmokePing 2.9.0** - Latest stable version
 - ✅ **Modern Frontend** - Responsive and customized interface
 - ✅ **Integrated Traceroute** - Live traceroute panel via internal API
+- ✅ **Telegram Alerts** - Real-time notifications for Loss, Latency, and **Route Changes**
 - ✅ **Full Customization** - Configurable Logo, Colors, and Branding via Environment Variables
 - ✅ **Docker Swarm Ready** - Simplified deployment with Traefik support
 - ✅ **Zero Code Configuration** - Frontend logic resides within the image, maintaining clean data persistence
