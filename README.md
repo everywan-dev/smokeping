@@ -16,16 +16,16 @@ Docker image de **SmokePing** con frontend personalizado, traceroute integrado y
 
 ## 🚀 Instalación Rápida (Swarm)
 
-Solo necesitas el archivo `docker-compose.swarm.yml` y tus volúmenes de datos.
+Solo necesitas el archivo `docker-compose.yml` y tus volúmenes de datos.
 
 1.  **Descargar el compose:**
     ```bash
-    wget https://raw.githubusercontent.com/everywan-dev/smokeping/main/docker-compose.swarm.yml
+    wget https://raw.githubusercontent.com/everywan-dev/smokeping/main/docker-compose.yml
     ```
 
 2.  **Desplegar el Stack:**
     ```bash
-    docker stack deploy -c docker-compose.swarm.yml smokeping
+    docker stack deploy -c docker-compose.yml smokeping
     ```
 
 ## ⚙️ Configuración (Environment Variables)
