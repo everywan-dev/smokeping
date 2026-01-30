@@ -6,36 +6,45 @@ services:
     container_name: smokeping
     hostname: ${SMOKEPING_HOSTNAME:-smokeping}
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Madrid}
+      # --- System Configuration ---
+      - PUID=${PUID:-1000}          # User ID to run as
+      - PGID=${PGID:-1000}          # Group ID to run as
+      - TZ=${TZ:-Europe/Madrid}     # Timezone (e.g., America/New_York)
       
-      # Site Identity
-      - SMOKEPING_OWNER=${SMOKEPING_OWNER:-SmokePing Admin}
-      - SMOKEPING_CONTACT=${SMOKEPING_CONTACT:-admin@example.com}
-      - SMOKEPING_HOSTNAME=${SMOKEPING_HOSTNAME:-smokeping}
-      - SMOKEPING_TITLE=${SMOKEPING_TITLE:-Network Monitor}
+      # --- Alerts (Telegram) ---
+      # Leave empty to disable alerts
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}  # Your Bot Token from @BotFather
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}      # Chat ID or Channel ID to send alerts to
       
-      # Branding
-      - SMOKEPING_BRAND_NAME=${SMOKEPING_BRAND_NAME:-My Company}
-      - SMOKEPING_BRAND_URL=${SMOKEPING_BRAND_URL:-https://example.com}
+      # --- Site Identity (Footer & Titles) ---
+      - SMOKEPING_OWNER=${SMOKEPING_OWNER:-SmokePing Admin}      # Name shown in footer "Owner"
+      - SMOKEPING_CONTACT=${SMOKEPING_CONTACT:-admin@example.com} # Email shown in footer
+      - SMOKEPING_HOSTNAME=${SMOKEPING_HOSTNAME:-smokeping}       # Hostname displayed in charts
+      - SMOKEPING_TITLE=${SMOKEPING_TITLE:-Network Monitor}       # Main page title
+      
+      # --- Branding (Footer Link) ---
+      - SMOKEPING_BRAND_NAME=${SMOKEPING_BRAND_NAME:-My Company} # Name of your company/brand
+      - SMOKEPING_BRAND_URL=${SMOKEPING_BRAND_URL:-https://example.com} # URL to your company website
+      
+      # --- Visual Customization ---
+      # URL to your logo (remote URL recommended, or local path relative to /usr/share/webapps/smokeping/)
       - SMOKEPING_LOGO_URL=${SMOKEPING_LOGO_URL:-images/smokeping.png}
-      - SMOKEPING_COLOR_SIDEBAR_BG=${SMOKEPING_COLOR_SIDEBAR_BG:-#1a1a2e}
+      - SMOKEPING_COLOR_SIDEBAR_BG=${SMOKEPING_COLOR_SIDEBAR_BG:-#1a1a2e} # Hex color for sidebar background
       
-      # Config
-      - TRACEPING_INTERVAL=${TRACEPING_INTERVAL:-300}
-      - TRACEPING_RETENTION_DAYS=${TRACEPING_RETENTION_DAYS:-365}
+      # --- Traceroute Configuration ---
+      - TRACEPING_INTERVAL=${TRACEPING_INTERVAL:-300}          # Interval between traceroutes (seconds)
+      - TRACEPING_RETENTION_DAYS=${TRACEPING_RETENTION_DAYS:-365} # History retention (days)
       
     cap_add:
-      - NET_RAW
-      - NET_ADMIN
+      - NET_RAW    # Required for ping
+      - NET_ADMIN  # Required for traceroute/network ops
       
     ports:
-      - "80:80"
+      - "80:80"    # Expose Web Interface on port 80
       
     volumes:
-      - ./config:/config
-      - ./data:/data
-      - ./logs:/logs
+      - ./config:/config  # Configuration files (Targets, Probes, etc.)
+      - ./data:/data      # RRD Databases (Persist these!)
+      - ./logs:/logs      # System logs
       
     restart: unless-stopped

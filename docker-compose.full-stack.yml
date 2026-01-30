@@ -35,17 +35,28 @@ services:
     container_name: smokeping
     hostname: ${SMOKEPING_HOSTNAME:-smokeping}
     environment:
+      # --- System ---
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
       - TZ=${TZ:-Europe/Madrid}
+      
+      # --- Alerts (Telegram) ---
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      
+      # --- Identity ---
       - SMOKEPING_OWNER=${SMOKEPING_OWNER:-SmokePing Admin}
       - SMOKEPING_CONTACT=${SMOKEPING_CONTACT:-admin@example.com}
       - SMOKEPING_HOSTNAME=${SMOKEPING_HOSTNAME:-smokeping}
       - SMOKEPING_TITLE=${SMOKEPING_TITLE:-Network Monitor}
+      
+      # --- Branding ---
       - SMOKEPING_BRAND_NAME=${SMOKEPING_BRAND_NAME:-My Company}
       - SMOKEPING_BRAND_URL=${SMOKEPING_BRAND_URL:-https://example.com}
       - SMOKEPING_LOGO_URL=${SMOKEPING_LOGO_URL:-images/smokeping.png}
       - SMOKEPING_COLOR_SIDEBAR_BG=${SMOKEPING_COLOR_SIDEBAR_BG:-#1a1a2e}
+      
+      # --- Traceroute ---
       - TRACEPING_INTERVAL=${TRACEPING_INTERVAL:-300}
       - TRACEPING_RETENTION_DAYS=${TRACEPING_RETENTION_DAYS:-365}
     cap_add:
@@ -61,6 +72,7 @@ services:
       mode: replicated
       replicas: 1
       labels:
+        # Traefik Router Configuration
         - "traefik.enable=true"
         - "traefik.http.routers.smokeping.rule=Host(`localhost`) || HostRegexp(`^.+`)"
         - "traefik.http.routers.smokeping.entrypoints=web"

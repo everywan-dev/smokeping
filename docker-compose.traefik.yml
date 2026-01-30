@@ -5,24 +5,44 @@ services:
     image: sistemasminorisa/smokeping:2.9.0
     hostname: ${SMOKEPING_HOSTNAME:-smokeping-master}
     environment:
+      # --- System Configuration ---
+      # User ID for the smokeping process. Defaults to 1000.
       - PUID=${PUID:-1000}
+      # Group ID for the smokeping process. Defaults to 1000.
       - PGID=${PGID:-1000}
+      # Timezone for the container. Defaults to Europe/Madrid.
       - TZ=${TZ:-Europe/Madrid}
       
-      # Site Identity
+      # --- Alerts (Telegram) ---
+      # Telegram Bot Token for sending alerts. Leave empty to disable.
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      # Telegram Chat ID to send alerts to. Leave empty to disable.
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      
+      # --- Site Identity ---
+      # Name of the owner displayed in the web interface. Defaults to 'SmokePing Admin'.
       - SMOKEPING_OWNER=${SMOKEPING_OWNER:-SmokePing Admin}
+      # Contact email displayed in the web interface. Defaults to 'admin@example.com'.
       - SMOKEPING_CONTACT=${SMOKEPING_CONTACT:-admin@example.com}
+      # Hostname used for internal configuration and display. Defaults to 'smokeping-master'.
       - SMOKEPING_HOSTNAME=${SMOKEPING_HOSTNAME:-smokeping-master}
+      # Title displayed in the web interface. Defaults to 'Network Monitor'.
       - SMOKEPING_TITLE=${SMOKEPING_TITLE:-Network Monitor}
       
-      # Branding
+      # --- Branding ---
+      # Brand name displayed in the web interface. Defaults to 'My Company'.
       - SMOKEPING_BRAND_NAME=${SMOKEPING_BRAND_NAME:-My Company}
+      # URL for the brand name link. Defaults to 'https://example.com'.
       - SMOKEPING_BRAND_URL=${SMOKEPING_BRAND_URL:-https://example.com}
+      # URL for the logo image. Defaults to 'images/smokeping.png'.
       - SMOKEPING_LOGO_URL=${SMOKEPING_LOGO_URL:-images/smokeping.png}
+      # Background color for the sidebar. Defaults to '#1a1a2e'.
       - SMOKEPING_COLOR_SIDEBAR_BG=${SMOKEPING_COLOR_SIDEBAR_BG:-#1a1a2e}
       
-      # Config
+      # --- Traceroute Config ---
+      # Interval in seconds between traceroute pings. Defaults to 300 (5 minutes).
       - TRACEPING_INTERVAL=${TRACEPING_INTERVAL:-300}
+      # Number of days to retain traceroute data. Defaults to 365.
       - TRACEPING_RETENTION_DAYS=${TRACEPING_RETENTION_DAYS:-365}
       
     cap_add:
@@ -30,9 +50,9 @@ services:
       - NET_ADMIN
       
     volumes:
-      - ./config:/config
-      - ./data:/data
-      - ./logs:/logs
+      - /mnt/ceph/swarm/smokeping/config:/config
+      - /mnt/ceph/swarm/smokeping/data:/data
+      - /mnt/ceph/swarm/smokeping/logs:/logs
       
     networks:
       - traefik-public

@@ -5,23 +5,28 @@ services:
     image: sistemasminorisa/smokeping:2.9.0
     hostname: ${SMOKEPING_HOSTNAME:-smokeping-master}
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Madrid}
+      # --- System Configuration ---
+      - PUID=${PUID:-1000}          # User ID
+      - PGID=${PGID:-1000}          # Group ID
+      - TZ=${TZ:-Europe/Madrid}     # Timezone
       
-      # Site Identity
+      # --- Alerts (Telegram) ---
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}  # Your Bot Token
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}      # Chat ID
+      
+      # --- Site Identity ---
       - SMOKEPING_OWNER=${SMOKEPING_OWNER:-SmokePing Admin}
       - SMOKEPING_CONTACT=${SMOKEPING_CONTACT:-admin@example.com}
       - SMOKEPING_HOSTNAME=${SMOKEPING_HOSTNAME:-smokeping-master}
       - SMOKEPING_TITLE=${SMOKEPING_TITLE:-Network Monitor}
       
-      # Branding
+      # --- Branding ---
       - SMOKEPING_BRAND_NAME=${SMOKEPING_BRAND_NAME:-My Company}
       - SMOKEPING_BRAND_URL=${SMOKEPING_BRAND_URL:-https://example.com}
       - SMOKEPING_LOGO_URL=${SMOKEPING_LOGO_URL:-images/smokeping.png}
       - SMOKEPING_COLOR_SIDEBAR_BG=${SMOKEPING_COLOR_SIDEBAR_BG:-#1a1a2e}
       
-      # Config
+      # --- Traceroute Config ---
       - TRACEPING_INTERVAL=${TRACEPING_INTERVAL:-300}
       - TRACEPING_RETENTION_DAYS=${TRACEPING_RETENTION_DAYS:-365}
       
@@ -33,9 +38,10 @@ services:
       - "80:80"
       
     volumes:
-      - ./config:/config
-      - ./data:/data
-      - ./logs:/logs
+      # Swarm/Cluster Volumes (Adjust paths as needed)
+      - /mnt/ceph/swarm/smokeping/config:/config
+      - /mnt/ceph/swarm/smokeping/data:/data
+      - /mnt/ceph/swarm/smokeping/logs:/logs
       
     deploy:
       mode: replicated

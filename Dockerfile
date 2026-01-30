@@ -25,7 +25,7 @@ COPY src/telegram_notify.pl /usr/share/webapps/smokeping/telegram_notify.pl
 
 # Ensure permissions and install missing dependencies if any (DBI is usually there but let's be safe)
 RUN chmod +x /usr/share/webapps/smokeping/telegram_notify.pl && \
-    apk add --no-cache perl-dbi perl-dbd-sqlite perl-lwp-protocol-https perl-http-tiny
+    apk add --no-cache perl-dbi perl-dbd-sqlite perl-lwp-protocol-https perl-io-socket-ssl
 COPY frontend/ /usr/share/webapps/smokeping/
 COPY frontend/basepage.html /etc/smokeping/basepage.html
 COPY config/Targets /defaults/Targets
