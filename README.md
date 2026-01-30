@@ -121,10 +121,10 @@ SMOKEPING_TITLE=Acme Network Monitoring
 Simplemente define la URL de tu logo en las variables de entorno:
 
 ```bash
-SMOKEPING_LOGO_URL=https://mi-dominio.com/logo.svg
+SMOKEPING_LOGO_URL=https://example.com/logo.svg
 ```
 
-También puedes usar una ruta local si montas el volumen correspondiente, pero recomendamos usar una URL externa para mayor facilidad en Swarm.
+También puedes usar una ruta local si montas el volumen correspondiente.
 
 
 #### Personalizar Hostname en Gráficos
