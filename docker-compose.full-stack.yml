@@ -1,23 +1,60 @@
+# Full Stack: SmokePing + Traefik v3 with SSL
+#
+# This compose file deploys both Traefik (reverse proxy with automatic SSL)
+# and SmokePing together. Ideal for fresh deployments where you don't have
+# an existing reverse proxy.
+#
+# REQUIREMENTS:
+#   - A domain pointing to your server (for SSL certificates)
+#   - Ports 80 and 443 available
+#   - Docker Swarm mode initialized (docker swarm init)
+#
+# USAGE:
+#   1. Copy .env.example to .env and configure your domain and email
+#   2. Run: docker stack deploy -c docker-compose.full-stack.yml monitor
+#
+# The stack will:
+#   - Obtain SSL certificates automatically via Let's Encrypt
+#   - Redirect HTTP to HTTPS
+#   - Serve SmokePing on https://your-domain.com
+
 version: '3.8'
 
 services:
   # ==========================================
-  # Traefik Reverse Proxy (The Gateway)
+  # Traefik v3 - Reverse Proxy with SSL
   # ==========================================
   traefik:
     image: traefik:v3.3
     hostname: traefik
     command:
-      - "--api.insecure=true"
+      # API and Dashboard
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+      # Docker provider
       - "--providers.docker=true"
       - "--providers.docker.swarmMode=true"
       - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=monitor-net"
+      # Entrypoints
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # HTTP to HTTPS redirect
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      # Let's Encrypt
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@example.com}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      # Uncomment for testing (uses staging server, avoids rate limits)
+      # - "--certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
     ports:
       - "80:80"
-      - "8080:8080"
+      - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-certs:/letsencrypt
     networks:
       - monitor-net
     deploy:
@@ -26,13 +63,22 @@ services:
       placement:
         constraints:
           - node.role == manager
+      labels:
+        # Traefik Dashboard (optional, access at https://your-domain.com/dashboard/)
+        - "traefik.enable=true"
+        - "traefik.http.routers.traefik-dashboard.rule=Host(`${DOMAIN:-localhost}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+        - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+        - "traefik.http.routers.traefik-dashboard.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.traefik-dashboard.service=api@internal"
+        # Basic auth for dashboard (generate with: htpasswd -nb admin yourpassword)
+        # - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-auth"
+        # - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$..."
 
   # ==========================================
-  # Smokeping Application
+  # SmokePing Application
   # ==========================================
   smokeping:
-    image: sistemasminorisa/smokeping:2.9.0
-    container_name: smokeping
+    image: sistemasminorisa/smokeping:latest
     hostname: ${SMOKEPING_HOSTNAME:-smokeping}
     environment:
       # --- System ---
@@ -59,25 +105,46 @@ services:
       # --- Traceroute ---
       - TRACEPING_INTERVAL=${TRACEPING_INTERVAL:-300}
       - TRACEPING_RETENTION_DAYS=${TRACEPING_RETENTION_DAYS:-365}
+      
     cap_add:
       - NET_RAW
       - NET_ADMIN
     volumes:
-      - ./config:/config
-      - ./data:/data
-      - ./logs:/logs
+      - smokeping-config:/config
+      - smokeping-data:/data
     networks:
       - monitor-net
     deploy:
       mode: replicated
       replicas: 1
       labels:
-        # Traefik Router Configuration
         - "traefik.enable=true"
-        - "traefik.http.routers.smokeping.rule=Host(`localhost`) || HostRegexp(`^.+`)"
-        - "traefik.http.routers.smokeping.entrypoints=web"
+        # HTTPS Router
+        - "traefik.http.routers.smokeping.rule=Host(`${DOMAIN:-localhost}`)"
+        - "traefik.http.routers.smokeping.entrypoints=websecure"
+        - "traefik.http.routers.smokeping.tls.certresolver=letsencrypt"
         - "traefik.http.services.smokeping.loadbalancer.server.port=80"
 
 networks:
   monitor-net:
     driver: overlay
+
+volumes:
+  traefik-certs:
+  smokeping-config:
+  smokeping-data:
+
+# ==============================================================================
+# ENVIRONMENT VARIABLES (.env file)
+# ==============================================================================
+# Required:
+#   DOMAIN=smokeping.example.com
+#   ACME_EMAIL=admin@example.com
+#
+# Optional:
+#   TELEGRAM_BOT_TOKEN=your_bot_token
+#   TELEGRAM_CHAT_ID=your_chat_id
+#   SMOKEPING_BRAND_NAME=Your Company
+#   SMOKEPING_LOGO_URL=https://your-company.com/logo.png
+#   TZ=Europe/Madrid
+# ==============================================================================
