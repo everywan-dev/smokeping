@@ -29,15 +29,15 @@ We've been using this in production for years. Now we're sharing it.
 
 **Dashboard with multi-location monitoring**
 
-![Dashboard](https://files.catbox.moe/r7ssle.png)
+![Dashboard](docs/screenshots/dashboard.png)
 
 **Target detail with integrated traceroute panel**
 
-![Traceroute Panel](https://files.catbox.moe/mamr5u.png)
+![Traceroute Panel](docs/screenshots/traceroute-panel.png)
 
 **Navigator graph for historical analysis**
 
-![Navigator](https://files.catbox.moe/uf1swj.png)
+![Navigator](docs/screenshots/navigator.png)
 
 ---
 
