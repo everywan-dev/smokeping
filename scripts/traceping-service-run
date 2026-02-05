@@ -13,6 +13,19 @@ ls -la /scripts/apply-config.sh || echo "Script not found!"
 sh /scripts/apply-config.sh || echo "Failed to run script!"
 echo "[traceping-s6] Config application done."
 
+# FORCE FIX PERMISSIONS (User is desperate)
+# Ensure 'abc' (the user running smokeping) owns the config
+echo "[traceping-s6] Enforcing ownership on /config and /data..."
+chown -R abc:abc /config
+chown -R abc:abc /data
+# Set sensible permissions: directories 755, files 644
+find /config -type d -exec chmod 755 {} \;
+find /config -type f -exec chmod 644 {} \;
+find /data -type d -exec chmod 755 {} \;
+find /data -type f -exec chmod 644 {} \;
+# CRITICAL: Secrets must be 600 (not world readable)
+chmod 600 /config/smokeping_secrets 2>/dev/null || true
+
 # ==============================================================================
 # Ensure Apache Proxy Configuration is Active
 # ==============================================================================

@@ -9,6 +9,7 @@ remark = Welcome to SmokePing Network Monitoring - Latency and packet loss monit
 +TechGiants
 menu = Tech Giants
 title = Global Tech Giants & Streaming Services
+alerts = bigloss,someloss,rttdetect,startloss
 
 ++YouTube
 menu = YouTube
@@ -74,6 +75,7 @@ host = www.linkedin.com
 +CDN
 menu = CDN & DNS
 title = Content Delivery Networks & Global DNS
+alerts = bigloss,someloss,rttdetect,startloss
 
 ++CloudFlare
 menu = Cloudflare DNS (1.1.1.1)
@@ -124,6 +126,17 @@ host = 151.101.1.57
 +EMEA
 menu = EMEA
 title = Europe, Middle East & Africa
+alerts = bigloss,someloss,rttdetect,startloss
+
+++VPN_Test
+menu = VPN Test
+title = VPN Test (178.156.72.249)
+host = 178.156.72.249
+
+++TEST2
+menu = TEST2 (Alerts)
+title = TEST2 (Failure Simulation)
+host = 217.150.213.14
 
 ++everyWAN_AS33932
 menu = ES everyWAN (Barcelona) AS33932
@@ -273,6 +286,7 @@ host = 196.216.2.1
 +NA
 menu = NA
 title = North America (USA & Canada)
+alerts = bigloss,someloss,rttdetect,startloss
 
 ++US_Level3_AS3356
 menu = US Level3 AS3356
@@ -313,6 +327,7 @@ host = 96.52.0.1
 +LATAM
 menu = LATAM
 title = Latin America (Central & South)
+alerts = bigloss,someloss,rttdetect,startloss
 
 ++MX_Google
 menu = MX Google Mexico
@@ -353,6 +368,7 @@ host = 200.37.224.10
 +APAC
 menu = APAC
 title = Asia Pacific
+alerts = bigloss,someloss,rttdetect,startloss
 
 ++JP_NTT_AS2914
 menu = JP NTT Communications AS2914

@@ -15,7 +15,64 @@
 - ✅ **Docker Swarm Ready** - Simplified deployment with Traefik support
 - ✅ **Zero Code Configuration** - Frontend logic resides within the image, maintaining clean data persistence
 
-## 🚀 Deployment Options
+## � How This Image Works
+
+> **You don't need to clone this repository to use SmokePing!**
+
+This is a **pre-configured SmokePing Docker image** ready to run. The image includes:
+- A **custom modern frontend** with responsive design
+- **Example targets** (major CDN providers, DNS servers, etc.) to get you started
+- **Telegram alert scripts** for real-time notifications
+- **Traceroute integration** for route monitoring
+
+### Customizing for Your Brand
+
+Simply use [`docker-compose.yml`](#1️⃣-standalone-localsingle-server) from Docker Hub and customize via **environment variables**:
+
+```yaml
+services:
+  smokeping:
+    image: sistemasminorisa/smokeping:latest
+    environment:
+      - SMOKEPING_LOGO_URL=https://your-company.com/logo.png
+      - SMOKEPING_BRAND_NAME=Your Company
+      - SMOKEPING_COLOR_SIDEBAR_BG=#1a1a2e
+      - SMOKEPING_TITLE=Network Monitor
+```
+
+### Adding Your Own Targets
+
+Targets are configured in a simple **volume-mounted file**. Just create your own `config/Targets` file:
+
+```ini
+*** Targets ***
+
++MyServers
+menu = My Servers
+title = Production Servers
+
+++WebServer
+menu = Web Server
+title = Main Web Server
+host = web.example.com
+alerts = bigloss,someloss
+
+++DatabaseServer
+menu = Database
+title = PostgreSQL Server
+host = db.example.com
+traceroute_mode = tcp
+```
+
+Mount it in your compose file:
+```yaml
+volumes:
+  - ./config/Targets:/config/Targets:ro
+```
+
+> **The example targets in this repository** are demonstrations. Replace them with your own infrastructure!
+
+## �🚀 Deployment Options
 
 We have prepared 3 configurations ready to use depending on your environment:
 
@@ -52,12 +109,37 @@ docker stack deploy -c docker-compose.full-stack.yml monitor
 ```
 *(Access Smokeping via http://localhost or any node IP)*
 
-## 🔔 Telegram Alerts
+## 🔔 Telegram Alerts System
 
-Smokeping can now send alerts directly to Telegram when:
-1.  Packet Loss is detected.
-2.  Latency spikes occur.
-3.  **Route Changes**: If the traceroute path changes, you get a notification with the old and new route.
+This image includes a **Smart Alert System** that goes beyond basic ping monitoring. It integrates both native SmokePing alerts and a custom Daemon for route analysis.
+
+### Available Alert Types
+The system comes pre-configured with **4 defined alert patterns** in `config/Alerts`:
+
+| Alert Name | Type | Sensitivity | Trigger Condition | Status Header |
+| :--- | :--- | :--- | :--- | :--- |
+| **`bigloss`** | Loss | **CRITICAL** | **100% Loss** for **3 cycles** (~15 min) | `🔴 CRITICAL ALERT` |
+| **`someloss`** | Loss | **WARNING** | **Any Loss** for **2 cycles** | `⚠️ WARNING` |
+| **`rttdetect`** | Latency | **WARNING** | Sudden **Latency Spike** (>10ms increase) | `⚠️ WARNING` |
+| **`startloss`** | Loss | **WARNING** | Loss detected immediately at startup | `⚠️ WARNING` |
+| **(Route)** | Trace | **INFO** | **Significant Path Change** detected | `⚠️ Route Change Detected` |
+
+> **Note:** Route Change alerts are **Always Active** and global. Loss/Latency alerts must be assigned to targets.
+
+### How to Enable Alerts (Important)
+To enable alerts for a target, you must add the `alerts` line to the target definition in `config/Targets`.
+
+**✅ CORRECT Usage (Per Target or Group):**
+```ini
+++MyCriticalServer
+menu = Critical Server
+title = Critical Server IP
+host = 1.2.3.4
+alerts = bigloss,someloss,rttdetect,startloss
+```
+
+**❌ INCORRECT Usage (Do NOT do this):**
+Do **NOT** add `alerts = ...` to the root `*** Targets ***` section. This causes startup errors due to configuration parsing order. Always apply it to Groups (e.g., `+EmEA`) or specific Targets.
 
 ### Configuration
 Simply add these environment variables to your compose file:
@@ -69,6 +151,46 @@ Simply add these environment variables to your compose file:
 ```
 
 The system works automatically once these variables are present.
+
+## 🛣️ Traceroute Configuration
+
+### Per-Host Traceroute Mode
+The traceroute daemon supports **3 modes** configurable per-host:
+
+| Mode | Protocol | Use Case |
+|------|----------|----------|
+| `icmp` | ICMP Echo | **Default.** Most compatible, works like ping. |
+| `udp` | UDP | Classic traceroute. Works when ICMP is blocked. |
+| `tcp` | TCP SYN | Best for hosts behind strict firewalls (uses `tcptraceroute`). |
+
+**Usage in `config/Targets`:**
+```ini
+++MyServer
+menu = My Server
+title = My Server Description
+host = 1.2.3.4
+traceroute_mode = icmp
+
+++FirewalledServer
+menu = Firewalled Server
+title = This host blocks ICMP and UDP
+host = 5.6.7.8
+traceroute_mode = tcp
+```
+
+> **Default:** If `traceroute_mode` is not specified, `icmp` is used.
+
+### Route Change Detection
+The system automatically monitors route paths and alerts via Telegram when your **upstream provider changes**.
+
+**What triggers an alert:**
+- Provider appears or disappears (e.g., `twelve99.net` → `cogent.net`)
+
+**What does NOT trigger an alert:**
+- Internal load balancing within the same provider
+- Timeout variations (`*` hops)
+- Different routers at the same ISP
+
 
 ## ⚙️ Configuration (Environment Variables)
 

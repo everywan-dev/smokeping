@@ -66,6 +66,102 @@ sub init_database {
     }
 }
 
+# Check if an IP is private (RFC1918)
+sub is_private_ip {
+    my ($ip) = @_;
+    return 0 unless defined $ip;
+    return 0 if $ip eq '*';
+    
+    my @parts = split(/\./, $ip);
+    return 0 if scalar(@parts) != 4;
+    
+    # 10.0.0.0/8
+    return 1 if ($parts[0] eq '10');
+    # 172.16.0.0/12
+    return 1 if ($parts[0] eq '172' && $parts[1] >= 16 && $parts[1] <= 31);
+    # 192.168.0.0/16
+    return 1 if ($parts[0] eq '192' && $parts[1] eq '168');
+    # 100.64.0.0/10 (CGNAT)
+    return 1 if ($parts[0] eq '100' && $parts[1] >= 64 && $parts[1] <= 127);
+    
+    return 0;
+}
+
+# Extract domain suffix from hop string (e.g. "prs-bb1-link.ip.twelve99.net (62.115.x.x)" -> "twelve99.net")
+sub extract_domain {
+    my ($hop) = @_;
+    return '' unless defined $hop;
+    
+    # Format: "hostname (IP)" or just "IP" or "*"
+    if ($hop =~ /^([^\s]+)\s+\(/) {
+        my $hostname = $1;
+        # Get last 2 parts of hostname (domain.tld)
+        my @parts = split(/\./, $hostname);
+        if (scalar(@parts) >= 2) {
+            return join('.', @parts[-2..-1]);
+        }
+    }
+    return '';
+}
+
+# Extract IP from hop string
+sub extract_ip {
+    my ($hop) = @_;
+    return '' unless defined $hop;
+    
+    if ($hop =~ /\((\d+\.\d+\.\d+\.\d+)\)/) {
+        return $1;
+    }
+    # Might be just an IP
+    if ($hop =~ /^(\d+\.\d+\.\d+\.\d+)$/) {
+        return $1;
+    }
+    return '';
+}
+
+# Check if two hops are "similar" - SMART comparison
+# Returns 1 if hops should be considered equivalent (no alert)
+sub is_similar_hop {
+    my ($hop1, $hop2) = @_;
+    
+    # Both undefined or timeout - consider equivalent
+    return 1 if (!defined $hop1 && !defined $hop2);
+    return 1 if ((defined $hop1 && $hop1 eq '*') && (defined $hop2 && $hop2 eq '*'));
+    
+    # One is timeout/undef, other is not - IGNORE (don't trigger alert for timeouts)
+    return 1 if (!defined $hop1 || !defined $hop2);
+    return 1 if ($hop1 eq '*' || $hop2 eq '*');
+    
+    # Exact match
+    return 1 if ($hop1 eq $hop2);
+    
+    # Extract IPs
+    my $ip1 = extract_ip($hop1);
+    my $ip2 = extract_ip($hop2);
+    
+    # Both are private IPs - consider equivalent (internal routing doesn't matter)
+    if ($ip1 && $ip2) {
+        return 1 if (is_private_ip($ip1) && is_private_ip($ip2));
+    }
+    
+    # Check domain - if same domain suffix, consider equivalent
+    my $domain1 = extract_domain($hop1);
+    my $domain2 = extract_domain($hop2);
+    
+    if ($domain1 && $domain2 && $domain1 eq $domain2) {
+        return 1;  # Same ISP, just different router
+    }
+    
+    # Both public IPs without hostnames - check same /16
+    if ($ip1 && $ip2 && !$domain1 && !$domain2) {
+        my @parts1 = split(/\./, $ip1);
+        my @parts2 = split(/\./, $ip2);
+        return 1 if ($parts1[0] eq $parts2[0] && $parts1[1] eq $parts2[1]);
+    }
+    
+    return 0;
+}
+
 sub load_targets {
     my @targets;
     
@@ -87,13 +183,15 @@ sub load_targets {
                         next if !exists $group_hr->{$server}->{$third}->{'host'};
                         push @targets, { 
                             target => "${target}.${third}", 
-                            host => $group_hr->{$server}->{$third}->{'host'} 
+                            host => $group_hr->{$server}->{$third}->{'host'},
+                            traceroute_mode => $group_hr->{$server}->{$third}->{'traceroute_mode'} || 'icmp'
                         };
                     }
                 } else {
                     push @targets, { 
                         target => $target, 
-                        host => $group_hr->{$server}->{'host'} 
+                        host => $group_hr->{$server}->{'host'},
+                        traceroute_mode => $group_hr->{$server}->{'traceroute_mode'} || 'icmp'
                     };
                 }
             }
@@ -153,9 +251,30 @@ sub run_traceroute {
     my ($target) = @_;
     my $host = $target->{host};
     my $name = $target->{target};
+    my $mode = $target->{traceroute_mode} || 'icmp';  # Default to ICMP
     
-    # Ejecutar traceroute
-    my $result = `/usr/bin/traceroute -w 1 -q 1 -m 20 $host 2>&1`; # Optimizado: 1 sonda, max 20 saltos para velocidad
+    # Build traceroute command based on mode
+    my $cmd;
+    if ($mode eq 'tcp') {
+        # TCP traceroute (uses tcptraceroute binary)
+        $cmd = "/usr/bin/timeout 15s /usr/bin/tcptraceroute -w 1 -q 1 -m 20 $host 2>&1";
+    } elsif ($mode eq 'udp') {
+        # Standard UDP traceroute
+        $cmd = "/usr/bin/timeout 15s /usr/bin/traceroute -w 1 -q 1 -m 20 $host 2>&1";
+    } else {
+        # ICMP traceroute (default, most compatible)
+        $cmd = "/usr/bin/timeout 15s /usr/bin/traceroute -I -w 1 -q 1 -m 20 $host 2>&1";
+    }
+    
+    my $result = `$cmd`;
+    my $exit_code = $? >> 8;
+
+    # Si timeout mata el proceso, el exit code suele ser 124 o 137
+    if ($exit_code == 124 || $exit_code == 137) {
+        print strftime("%Y-%m-%d %H:%M:%S", localtime) . " - TIMEOUT WARNING: Traceroute to $name ($host) took too long and was killed.\n";
+        $result = ""; # No guardar resultado parcial corrupto
+    }
+
     my $timestamp = strftime("%Y-%m-%d %H:%M:%S", localtime);
     
     my $dbh = DBI->connect($dsn, '', '', { RaiseError => 0, PrintError => 0 });
@@ -175,13 +294,50 @@ sub run_traceroute {
         # 3. Detectar cambios (Si hay config de telegram y habia ruta previa)
         if ($ENV{'TELEGRAM_BOT_TOKEN'} && $last_tracert && $last_tracert ne $result) {
             # Limpiar timestamps/tiempos del output para evitar falsos positivos por jitter
-            # Comparamos solo las IPs/Hosts
             my $clean_old = extract_hops($last_tracert);
             my $clean_new = extract_hops($result);
             
             if ($clean_old ne $clean_new) {
-                print "Route change detected for $name\n";
-                system("/usr/share/webapps/smokeping/telegram_notify.pl", "Route Change Detected", $name, "", "", $host, "Old Route: $clean_old\nNew Route: $clean_new");
+                # PROVIDER-SET COMPARISON: Only alert if the SET of providers changes
+                # This ignores hop shifting and internal balancing
+                my @hops_old = split(/,/, $clean_old);
+                my @hops_new = split(/,/, $clean_new);
+                
+                # Extract unique provider domains from each route
+                my %providers_old;
+                my %providers_new;
+                
+                foreach my $hop (@hops_old) {
+                    my $domain = extract_domain($hop);
+                    $providers_old{$domain} = 1 if $domain;
+                }
+                
+                foreach my $hop (@hops_new) {
+                    my $domain = extract_domain($hop);
+                    $providers_new{$domain} = 1 if $domain;
+                }
+                
+                # Find providers that appeared or disappeared
+                my @disappeared;
+                my @appeared;
+                
+                foreach my $p (keys %providers_old) {
+                    push @disappeared, $p unless exists $providers_new{$p};
+                }
+                
+                foreach my $p (keys %providers_new) {
+                    push @appeared, $p unless exists $providers_old{$p};
+                }
+                
+                # Only alert if providers changed (ignore if same set)
+                if (@disappeared || @appeared) {
+                    my $change_summary = "";
+                    $change_summary .= "REMOVED: " . join(", ", @disappeared) . " | " if @disappeared;
+                    $change_summary .= "ADDED: " . join(", ", @appeared) if @appeared;
+                    
+                    print "Provider change detected for $name: $change_summary\n";
+                    system("/usr/share/webapps/smokeping/telegram_notify.pl", "Route Change Detected", $name, "", "", $host, "$clean_old|$clean_new|$change_summary");
+                }
             }
         }
         

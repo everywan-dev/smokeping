@@ -1,11 +1,15 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use utf8;
 use HTTP::Tiny;
 use JSON::PP;
 use DBI;
 use POSIX qw(strftime);
-use Encode qw(decode_utf8);
+use Encode qw(encode_utf8 decode_utf8);
+
+binmode(STDOUT, ':encoding(UTF-8)');
+binmode(STDERR, ':encoding(UTF-8)');
 
 # Configuration from Environment
 my $BOT_TOKEN = $ENV{'TELEGRAM_BOT_TOKEN'};
@@ -75,10 +79,24 @@ if (-e $db_path) {
 
 # Construct Message (HTML format)
 my $timestamp = strftime("%Y-%m-%d %H:%M:%S", localtime);
-my $status_emoji = ($alertname =~ /down/i || $loss =~ /100%/) ? "🔴" : "⚠️";
-$status_emoji = "🟢" if ($alertname =~ /clear/i);
+# Determine Status and Header
+my $status_emoji = "⚠️";
+my $status_text  = "WARNING";
 
-my $message = "$status_emoji <b>SmokePing Alert</b>\n\n";
+if ($alertname =~ /bigloss/i || $loss =~ /100%/) {
+    $status_emoji = "🔴";
+    $status_text  = "CRITICAL ALERT";
+} elsif ($alertname =~ /rtt/i || $alertname =~ /someloss/i) {
+    $status_emoji = "⚠️";
+    $status_text  = "WARNING";
+}
+
+if ($alertname =~ /clear/i) {
+    $status_emoji = "🟢";
+    $status_text  = "RECOVERY";
+}
+
+my $message = "$status_emoji <b>$status_text</b>\n\n";
 $message .= "<b>Target:</b> $target\n";
 $message .= "<b>Alert:</b> $alertname\n";
 $message .= "<b>Time:</b> $timestamp\n";
@@ -90,7 +108,39 @@ if ($rtt) {
     $message .= "<b>Latency:</b> $rtt\n";
 }
 if ($extra_msg) {
-    $message .= "<b>Note:</b> $extra_msg\n";
+    # Check if it's a Route Change (format: Old|New)
+    if ($extra_msg =~ /\|/) {
+        my ($old_raw, $new_raw) = split(/\|/, $extra_msg);
+        
+        $message .= "<b>🛣️ Route Change Detected:</b>\n";
+        
+        my @old_hops = split(/,/, $old_raw);
+        my @new_hops = split(/,/, $new_raw);
+        my $max_hops = scalar(@old_hops) > scalar(@new_hops) ? scalar(@old_hops) : scalar(@new_hops);
+        
+        $message .= "<pre>";
+        $message .= sprintf("%-3s %-15s %-15s\n", "#", "Old IP", "New IP");
+        $message .= "----------------------------------\n";
+        
+        for my $i (0 .. $max_hops-1) {
+            my $o_hop = $old_hops[$i] // "";
+            my $n_hop = $new_hops[$i] // "";
+            
+            # Limpiar formato "ID: IP" a solo IP para que quepa
+            $o_hop =~ s/^\d+:\s*//;
+            $n_hop =~ s/^\d+:\s*//;
+            
+            # Cortar si es muy largo
+            $o_hop = substr($o_hop, 0, 15);
+            $n_hop = substr($n_hop, 0, 15);
+            
+            my $marker = ($o_hop eq $n_hop) ? " " : "!";
+            $message .= sprintf("%-3s %-15s %-15s %s\n", $i+1, $o_hop, $n_hop, $marker);
+        }
+        $message .= "</pre>\n";
+    } else {
+        $message .= "<b>Note:</b> $extra_msg\n";
+    }
 }
 
 $message .= $traceroute_info if $traceroute_info;
@@ -102,13 +152,13 @@ my $ua = HTTP::Tiny->new(timeout => 10);
 my $response = $ua->post(
     "https://api.telegram.org/bot$BOT_TOKEN/sendMessage",
     {
-        headers => { 'Content-Type' => 'application/json' },
-        content => encode_json({
+        headers => { 'Content-Type' => 'application/json; charset=utf-8' },
+        content => encode_utf8(encode_json({
             chat_id => $CHAT_ID,
             text    => $message,
             parse_mode => 'HTML',
             disable_web_page_preview => 1
-        })
+        }))
     }
 );
 

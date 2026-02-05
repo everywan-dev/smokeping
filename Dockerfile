@@ -29,6 +29,7 @@ RUN chmod +x /usr/share/webapps/smokeping/telegram_notify.pl && \
 COPY frontend/ /usr/share/webapps/smokeping/
 COPY frontend/basepage.html /etc/smokeping/basepage.html
 COPY config/Targets /defaults/Targets
+COPY config/Alerts /defaults/Alerts
 COPY config/Probes /defaults/Probes
 COPY config/Presentation /defaults/Presentation
 COPY scripts/traceping-service-run /etc/services.d/traceping/run
@@ -64,7 +65,7 @@ RUN rm /usr/share/webapps/smokeping/traceping.cgi && \
     /etc/smokeping/basepage.html
 
 # Fix CSS (force correct single line)
-RUN sed -i '/<style>/,/<\/style>/c\<style>\n#sidebar { background: {{SMOKEPING_COLOR_SIDEBAR_BG}} !important; }\n#sidebar .logo { background: transparent; }\n</style>' /etc/smokeping/basepage.html
+RUN sed -i '/<style>/,/<\/style>/c\<style>\n#sidebar { background: {{SMOKEPING_COLOR_SIDEBAR_BG}} !important; }\n#sidebar .logo { background: transparent; }\n#sidebarCollapse { background: {{SMOKEPING_COLOR_SIDEBAR_BG}} !important; border-color: {{SMOKEPING_COLOR_SIDEBAR_BG}} !important; box-shadow: none !important; }\n#filter, input[name="filter"] { border-color: {{SMOKEPING_COLOR_SIDEBAR_BG}} !important; border-width: 2px !important; background: {{SMOKEPING_COLOR_SIDEBAR_BG}} !important; color: #ffffff !important; }\n</style>' /etc/smokeping/basepage.html
 
 # Fix Permissions (Dedicated Layer)
 RUN chmod +x /etc/services.d/traceping/run \

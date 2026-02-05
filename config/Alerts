@@ -4,13 +4,13 @@ from = smokealert@localhost
 
 +bigloss
 type = loss
-pattern = ==0%,==0%,==0%,==0%,>0%,>0%,>0%
-comment = sudden loss detected
+pattern = ==0%,==0%,==100%,==100%,==100%
+comment = multiple cycles of total loss (15min+)
 
 +someloss
 type = loss
-pattern = >0%,*12*,>0%,*12*,>0%
-comment = loss 3 times  in a row
+pattern = ==0%,>0%,>0%
+comment = loss 2 times in a row
 
 +startloss
 type = loss

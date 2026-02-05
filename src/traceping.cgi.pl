@@ -41,8 +41,9 @@ if ($history) {
 sub get_traceroute {
     my ($target) = @_;
     my $dbh = DBI->connect($dsn, $db_username, $db_password, { RaiseError => 0, PrintError => 0 });
-    return 'Error de conexión a base de datos' unless $dbh;
+    return 'Esperando datos de traceroute...' unless $dbh;
     my $sth = $dbh->prepare('SELECT tracert FROM traceroute_history WHERE target=? ORDER BY timestamp DESC LIMIT 1');
+    return 'Error consultando base de datos: ' . $dbh->errstr unless $sth;
     $sth->execute($target);
     my $result = $sth->fetchrow_array;
     $dbh->disconnect;
