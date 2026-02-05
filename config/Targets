@@ -128,22 +128,6 @@ menu = EMEA
 title = Europe, Middle East & Africa
 alerts = bigloss,someloss,rttdetect,startloss
 
-++VPN_Test
-menu = VPN Test
-title = VPN Test (178.156.72.249)
-host = 178.156.72.249
-
-++TEST2
-menu = TEST2 (Alerts)
-title = TEST2 (Failure Simulation)
-host = 217.150.213.14
-
-++everyWAN_AS33932
-menu = ES everyWAN (Barcelona) AS33932
-title = ES everyWAN (Barcelona) AS33932
-host = everywan.com
-
-
 # --- Spain ---
 
 ++ES_Orange_BCN_AS12479
