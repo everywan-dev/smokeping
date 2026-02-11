@@ -29,6 +29,7 @@ services:
       # --- Traceroute Config ---
       - TRACEPING_INTERVAL=${TRACEPING_INTERVAL:-300}
       - TRACEPING_RETENTION_DAYS=${TRACEPING_RETENTION_DAYS:-365}
+      - TRACEPING_ASN_LOOKUP=${TRACEPING_ASN_LOOKUP:-false}
       
     cap_add:
       - NET_RAW
