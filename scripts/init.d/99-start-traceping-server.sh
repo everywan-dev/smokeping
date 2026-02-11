@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Iniciar servidor Perl para traceping
+# Start Perl server for traceping
 echo "Starting TracePing server on port ${TRACEPING_PORT:-9000}..."
 /opt/smokeping/traceping_server_simple.pl &
 echo $! > /var/run/traceping_server.pid

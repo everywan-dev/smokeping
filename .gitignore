@@ -1,13 +1,13 @@
-# Variables de entorno
+# Environment variables
 .env
 
-# Datos y logs
+# Data and logs
 data/*
 !data/.gitkeep
 logs/*
 !logs/.gitkeep
 
-# Archivos temporales
+# Temporary files
 *.bak
 *.old
 *.tmp
@@ -21,7 +21,7 @@ __pycache__/
 *.pyd
 .Python
 
-# Entornos virtuales
+# Virtual environments
 venv/
 env/
 ENV/

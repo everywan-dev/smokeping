@@ -5,50 +5,50 @@ use warnings;
 use DBI;
 use POSIX qw(strftime);
 
-# Configuración - Adaptada para Docker
+# Configuration - Adapted for Docker
 my $dsn = "dbi:SQLite:dbname=/data/traceping.sqlite";
 my $config_file = '/config/Targets';
-my $interval = $ENV{TRACEPING_INTERVAL} || 300;  # 5 minutos por defecto
-my $retention_days = $ENV{TRACEPING_RETENTION_DAYS} || 365;  # 1 año por defecto
+my $interval = $ENV{TRACEPING_INTERVAL} || 300;  # 5 minutes by default
+my $retention_days = $ENV{TRACEPING_RETENTION_DAYS} || 365;  # 1 year by default
 
-# Zona horaria desde variable de entorno o por defecto
+# Timezone from environment variable or default
 my $tz = $ENV{TZ} || 'UTC';
 $ENV{TZ} = $tz;
 POSIX::tzset();
 
-# Cargar librería de Smokeping (ruta en Docker)
+# Load Smokeping library (Docker path)
 use lib '/usr/lib/smokeping';
 eval {
     require Smokeping;
     1;
 } or do {
-    # Si no está disponible, usar método alternativo
+    # If not available, use alternative method
     print strftime("%Y-%m-%d %H:%M:%S", localtime) . " - Warning: Smokeping library not found, using alternative method\n";
 };
 
-# Inicializar base de datos si no existe
+# Initialize database if it doesn't exist
 init_database();
 
-print strftime("%Y-%m-%d %H:%M:%S", localtime) . " - Traceping daemon iniciado (PID: $$)\n";
+print strftime("%Y-%m-%d %H:%M:%S", localtime) . " - Traceping daemon started (PID: $$)\n";
 print "  Config: $config_file\n";
-print "  Interval: $interval segundos\n";
-print "  Retention: $retention_days días\n";
+print "  Interval: $interval seconds\n";
+print "  Retention: $retention_days days\n";
 print "  Timezone: $tz\n";
 
-# Loop principal
+# Main loop
 while (1) {
     my @targets = load_targets();
     my $count = scalar(@targets);
-    print strftime("%Y-%m-%d %H:%M:%S", localtime) . " - Ejecutando traceroutes para $count targets...\n";
+    print strftime("%Y-%m-%d %H:%M:%S", localtime) . " - Running traceroutes for $count targets...\n";
     
     foreach my $target (@targets) {
         run_traceroute($target);
     }
     
-    # Limpiar registros antiguos
+    # Clean up old records
     cleanup_old_records();
     
-    print strftime("%Y-%m-%d %H:%M:%S", localtime) . " - Ciclo completado. Esperando $interval segundos...\n";
+    print strftime("%Y-%m-%d %H:%M:%S", localtime) . " - Cycle completed. Waiting $interval seconds...\n";
     sleep($interval);
 }
 
@@ -166,7 +166,7 @@ sub load_targets {
     my @targets;
     
     if (defined &Smokeping::load_cfg) {
-        # Método con librería Smokeping
+        # Method using Smokeping library
         Smokeping::load_cfg($config_file, 1);
         
         foreach my $group (keys %{$Smokeping::cfg->{'Targets'}}) {
@@ -197,13 +197,13 @@ sub load_targets {
             }
         }
     } else {
-        # Método alternativo: parsear archivo de configuración directamente
+        # Alternative method: parse configuration file directly
         if (open(my $fh, '<', $config_file)) {
             my $current_group = '';
             my $current_server = '';
             while (my $line = <$fh>) {
                 chomp $line;
-                $line =~ s/#.*$//;  # Eliminar comentarios
+                $line =~ s/#.*$//;  # Remove comments
                 $line =~ s/^\s+|\s+$//g;  # Trim
                 next if $line eq '';
                 
@@ -213,7 +213,7 @@ sub load_targets {
                     $current_server = $1;
                 } elsif ($line =~ /^\+\+\+(\w+)/) {
                     my $third = $1;
-                    # Buscar host en las siguientes líneas
+                    # Search for host in the following lines
                     my $host = '';
                     while (my $next_line = <$fh>) {
                         chomp $next_line;
@@ -269,17 +269,17 @@ sub run_traceroute {
     my $result = `$cmd`;
     my $exit_code = $? >> 8;
 
-    # Si timeout mata el proceso, el exit code suele ser 124 o 137
+    # If timeout kills the process, exit code is usually 124 or 137
     if ($exit_code == 124 || $exit_code == 137) {
         print strftime("%Y-%m-%d %H:%M:%S", localtime) . " - TIMEOUT WARNING: Traceroute to $name ($host) took too long and was killed.\n";
-        $result = ""; # No guardar resultado parcial corrupto
+        $result = ""; # Don't save corrupted partial result
     }
 
     my $timestamp = strftime("%Y-%m-%d %H:%M:%S", localtime);
     
     my $dbh = DBI->connect($dsn, '', '', { RaiseError => 0, PrintError => 0 });
     if ($dbh) {
-        # 1. Recuperar el último traceroute
+        # 1. Retrieve the last traceroute
         my $last_tracert = "";
         my $sth_check = $dbh->prepare('SELECT tracert FROM traceroute_history WHERE target = ? ORDER BY timestamp DESC LIMIT 1');
         $sth_check->execute($name);
@@ -287,13 +287,13 @@ sub run_traceroute {
             $last_tracert = $row->{tracert};
         }
         
-        # 2. Insertar el nuevo
+        # 2. Insert the new one
         my $sth = $dbh->prepare('INSERT INTO traceroute_history (target, tracert, timestamp) VALUES (?, ?, ?)');
         $sth->execute($name, $result, $timestamp);
         
-        # 3. Detectar cambios (Si hay config de telegram y habia ruta previa)
+        # 3. Detect changes (if Telegram config exists and there was a previous route)
         if ($ENV{'TELEGRAM_BOT_TOKEN'} && $last_tracert && $last_tracert ne $result) {
-            # Limpiar timestamps/tiempos del output para evitar falsos positivos por jitter
+            # Clean timestamps/times from output to avoid false positives due to jitter
             my $clean_old = extract_hops($last_tracert);
             my $clean_new = extract_hops($result);
             
@@ -345,7 +345,7 @@ sub run_traceroute {
     }
 }
 
-# Helper para extraer solo los saltos (IPs) y ignorar tiempos
+# Helper to extract only hops (IPs) and ignore times
 sub extract_hops {
     my $trace = shift;
     my @hops;

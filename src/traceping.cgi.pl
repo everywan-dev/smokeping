@@ -16,9 +16,9 @@ print "Content-Type: text/html\r\n\r\n";
 my $cgi = CGI->new;
 my $target = $cgi->param('target');
 my $history = $cgi->param('history');
-my $date_filter = $cgi->param('date');      # formato: YYYY-MM-DD
-my $hour_filter = $cgi->param('hour');      # formato: HH (00-23)
-my $limit = $cgi->param('limit') || 20;     # límite de resultados
+my $date_filter = $cgi->param('date');      # format: YYYY-MM-DD
+my $hour_filter = $cgi->param('hour');      # format: HH (00-23)
+my $limit = $cgi->param('limit') || 20;     # result limit
 
 # Validate target
 unless ($target && $target =~ /^[a-zA-Z0-9._-]+$/) {
@@ -26,7 +26,7 @@ unless ($target && $target =~ /^[a-zA-Z0-9._-]+$/) {
     exit 1;
 }
 
-# Validar límite
+# Validate limit
 $limit = 50 if $limit > 100;
 $limit = 10 if $limit < 5;
 
@@ -41,44 +41,44 @@ if ($history) {
 sub get_traceroute {
     my ($target) = @_;
     my $dbh = DBI->connect($dsn, $db_username, $db_password, { RaiseError => 0, PrintError => 0 });
-    return 'Esperando datos de traceroute...' unless $dbh;
+    return 'Waiting for traceroute data...' unless $dbh;
     my $sth = $dbh->prepare('SELECT tracert FROM traceroute_history WHERE target=? ORDER BY timestamp DESC LIMIT 1');
-    return 'Error consultando base de datos: ' . $dbh->errstr unless $sth;
+    return 'Database query error: ' . $dbh->errstr unless $sth;
     $sth->execute($target);
     my $result = $sth->fetchrow_array;
     $dbh->disconnect;
-    return $result || 'Sin datos de traceroute disponibles.';
+    return $result || 'No traceroute data available.';
 }
 
 sub get_traceroute_history {
     my ($target, $date_filter, $hour_filter, $limit) = @_;
     my $dbh = DBI->connect($dsn, $db_username, $db_password, { RaiseError => 0, PrintError => 0 });
-    return '<p style="color:#dc3545;">Error de conexión a base de datos</p>' unless $dbh;
+    return '<p style="color:#dc3545;">Database connection error</p>' unless $dbh;
     
     my $html = '';
     my $sth;
     my $info = '';
     
-    # Construir query según filtros
+    # Build query based on filters
     if ($date_filter && $date_filter =~ /^\d{4}-\d{2}-\d{2}$/) {
         if ($hour_filter && $hour_filter =~ /^\d{1,2}$/) {
-            # Filtro por fecha y hora
+            # Filter by date and time
             my $hour_start = sprintf("%02d:00:00", $hour_filter);
             my $hour_end = sprintf("%02d:59:59", $hour_filter);
             $sth = $dbh->prepare("SELECT tracert, timestamp FROM traceroute_history WHERE target=? AND date(timestamp)=? AND time(timestamp) BETWEEN ? AND ? ORDER BY timestamp DESC LIMIT ?");
             $sth->execute($target, $date_filter, $hour_start, $hour_end, $limit);
-            $info = "Resultados para $date_filter a las $hour_filter:xx";
+            $info = "Results for $date_filter at $hour_filter:xx";
         } else {
-            # Solo filtro por fecha
+            # Date filter only
             $sth = $dbh->prepare("SELECT tracert, timestamp FROM traceroute_history WHERE target=? AND date(timestamp)=? ORDER BY timestamp DESC LIMIT ?");
             $sth->execute($target, $date_filter, $limit);
-            $info = "Resultados para $date_filter";
+            $info = "Results for $date_filter";
         }
     } else {
-        # Sin filtro - últimos registros
+        # No filter - latest records
         $sth = $dbh->prepare('SELECT tracert, timestamp FROM traceroute_history WHERE target=? ORDER BY timestamp DESC LIMIT ?');
         $sth->execute($target, $limit);
-        $info = "Últimos registros";
+        $info = "Latest records";
     }
     
     my $count = 0;
@@ -93,9 +93,9 @@ sub get_traceroute_history {
     }
     
     if ($count == 0) {
-        $html = '<p style="color:#5f6368;font-size:12px;text-align:center;">Sin historial disponible para esta fecha/hora.</p>';
+        $html = '<p style="color:#5f6368;font-size:12px;text-align:center;">No history available for this date/time.</p>';
     } else {
-        $html = "<p style='color:#5f6368;font-size:11px;margin-bottom:10px;'>$info ($count registros)</p>" . $html;
+        $html = "<p style='color:#5f6368;font-size:11px;margin-bottom:10px;'>$info ($count records)</p>" . $html;
     }
     
     $dbh->disconnect;

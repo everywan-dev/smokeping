@@ -7,20 +7,20 @@
 
 echo "[custom-init] Applying custom configuration..."
 
-# Copiar configuración personalizada si existen
+# Copy custom configuration files if they exist
 [ -f /defaults/Targets ] && cp -f /defaults/Targets /config/Targets
 [ -f /defaults/Probes ] && cp -f /defaults/Probes /config/Probes
 [ -f /defaults/Presentation ] && cp -f /defaults/Presentation /config/Presentation
 [ -f /defaults/Alerts ] && cp -f /defaults/Alerts /config/Alerts
 
-# Copiar basepage personalizado
+# Copy custom basepage
 if [ -f /usr/share/webapps/smokeping/basepage.html ]; then
     cp -f /usr/share/webapps/smokeping/basepage.html /etc/smokeping/basepage.html
 elif [ -f /usr/share/smokeping/www/basepage.html ]; then
     cp -f /usr/share/smokeping/www/basepage.html /etc/smokeping/basepage.html
 fi
 
-# Configurar logo URL
+# Configure logo URL
 LOGO_URL=${SMOKEPING_LOGO_URL:-'images/smokeping.png'}
 if [ -f /etc/smokeping/basepage.html ]; then
     echo "[custom-init] Setting Logo URL: $LOGO_URL"
@@ -28,7 +28,7 @@ if [ -f /etc/smokeping/basepage.html ]; then
     perl -0777 -i -pe 's/\{\s*\{\s*SMOKEPING_LOGO_URL\s*\}\s*\}/$ENV{LOGO_URL}/g' /etc/smokeping/basepage.html
 fi
 
-# Configurar color del sidebar
+# Configure sidebar color
 SIDEBAR_BG=${SMOKEPING_COLOR_SIDEBAR_BG:-'#233350'}
 if [ -f /etc/smokeping/basepage.html ]; then
     echo "[custom-init] Setting Sidebar Color: $SIDEBAR_BG"
@@ -40,7 +40,7 @@ if [ -f /etc/smokeping/basepage.html ]; then
     perl -0777 -i -pe 's/<\/style>/#sidebarCollapse, #sidebarCollapse:hover, #sidebarCollapse:focus, #sidebar .custom-menu .btn.btn-primary, #sidebar .custom-menu .btn.btn-primary:hover, #sidebar .custom-menu .btn.btn-primary:focus { background: transparent !important; border-color: transparent !important; box-shadow: none !important; }\n#sidebar .custom-menu .btn.btn-primary:after, #sidebar .custom-menu .btn.btn-primary:hover:after, #sidebar .custom-menu .btn.btn-primary:focus:after { background: $ENV{SIDEBAR_BG} !important; }\n#filter, input[name="filter"] { border-color: $ENV{SIDEBAR_BG} !important; border-width: 2px !important; background: $ENV{SIDEBAR_BG} !important; color: #ffffff !important; }\n<\/style>/' /etc/smokeping/basepage.html
 fi
 
-# Configurar marca en footer (usando awk para evitar problemas con URLs)
+# Configure footer branding (using awk to avoid issues with URLs)
 BRAND_NAME=${SMOKEPING_BRAND_NAME:-''}
 BRAND_URL=${SMOKEPING_BRAND_URL:-''}
 if [ -n "$BRAND_NAME" ] && [ -n "$BRAND_URL" ]; then
@@ -53,7 +53,7 @@ if [ -f /etc/smokeping/basepage.html ]; then
     awk -v footer="$BRAND_FOOTER" '{gsub(/\{\{BRAND_FOOTER\}\}/, footer)}1' /etc/smokeping/basepage.html > /tmp/basepage.tmp && mv /tmp/basepage.tmp /etc/smokeping/basepage.html
 fi
 
-# Configurar General (owner, contact) usando awk
+# Configure General (owner, contact) using awk
 if [ -f /config/General ]; then
     OWNER="${SMOKEPING_OWNER:-SmokePing Admin}"
     CONTACT="${SMOKEPING_CONTACT:-admin@example.com}"
@@ -64,7 +64,7 @@ fi
 
 echo "[custom-init] Custom configuration applied."
 
-# Configurar hostname para gráficos
+# Configure hostname for graphs
 SMOKEPING_HOSTNAME=${SMOKEPING_HOSTNAME:-smokeping-master}
 echo "[custom-init] Hostname: $SMOKEPING_HOSTNAME"
 

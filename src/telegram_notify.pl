@@ -126,11 +126,11 @@ if ($extra_msg) {
             my $o_hop = $old_hops[$i] // "";
             my $n_hop = $new_hops[$i] // "";
             
-            # Limpiar formato "ID: IP" a solo IP para que quepa
+            # Clean format "ID: IP" to just IP to fit
             $o_hop =~ s/^\d+:\s*//;
             $n_hop =~ s/^\d+:\s*//;
             
-            # Cortar si es muy largo
+            # Truncate if too long
             $o_hop = substr($o_hop, 0, 15);
             $n_hop = substr($n_hop, 0, 15);
             
