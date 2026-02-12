@@ -7,11 +7,11 @@
 
 echo "[custom-init] Applying custom configuration..."
 
-# Copy custom configuration files if they exist
-[ -f /defaults/Targets ] && cp -f /defaults/Targets /config/Targets
-[ -f /defaults/Probes ] && cp -f /defaults/Probes /config/Probes
-[ -f /defaults/Presentation ] && cp -f /defaults/Presentation /config/Presentation
-[ -f /defaults/Alerts ] && cp -f /defaults/Alerts /config/Alerts
+# Seed default configuration files only when missing
+[ -f /defaults/Targets ] && [ ! -f /config/Targets ] && cp /defaults/Targets /config/Targets
+[ -f /defaults/Probes ] && [ ! -f /config/Probes ] && cp /defaults/Probes /config/Probes
+[ -f /defaults/Presentation ] && [ ! -f /config/Presentation ] && cp /defaults/Presentation /config/Presentation
+[ -f /defaults/Alerts ] && [ ! -f /config/Alerts ] && cp /defaults/Alerts /config/Alerts
 
 # Copy custom basepage
 if [ -f /usr/share/webapps/smokeping/basepage.html ]; then

@@ -91,6 +91,8 @@ Open `http://localhost` and you're monitoring.
 
 The image includes example targets (major CDN providers, DNS servers, etc.) so you can see it working immediately. Replace them with your own infrastructure.
 
+Default config files (`Targets`, `Probes`, `Presentation`, `Alerts`) are seeded from the image only when they are missing in `/config`. Existing files are preserved across container restarts.
+
 ---
 
 ## Docker Compose
