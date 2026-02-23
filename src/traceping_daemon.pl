@@ -209,11 +209,7 @@ sub load_targets {
                 $line =~ s/^\s+|\s+$//g;  # Trim
                 next if $line eq '';
 
-                if ($line =~ /^\+(\w+)/) {
-                    $current_group = $1;
-                } elsif ($line =~ /^\+\+(\w+)/) {
-                    $current_server = $1;
-                } elsif ($line =~ /^\+\+\+(\w+)/) {
+                if ($line =~ /^\+\+\+\s*(\w+)/) {
                     my $third = $1;
                     # Search for host in the following lines
                     my $host = '';
@@ -235,6 +231,10 @@ sub load_targets {
                             host => $host
                         };
                     }
+                } elsif ($line =~ /^\+\+\s*(\w+)/) {
+                    $current_server = $1;
+                } elsif ($line =~ /^\+\s*(\w+)/) {
+                    $current_group = $1;
                 } elsif ($line =~ /^host\s*=\s*(.+)$/i && $current_group && $current_server) {
                     push @targets, {
                         target => "${current_group}.${current_server}",
@@ -289,6 +289,7 @@ sub run_traceroute {
         if (my $row = $sth_check->fetchrow_hashref) {
             $last_tracert = $row->{tracert};
         }
+        $sth_check->finish;
 
         # 2. Insert the new one
         my $sth = $dbh->prepare('INSERT INTO traceroute_history (target, tracert, timestamp) VALUES (?, ?, ?)');

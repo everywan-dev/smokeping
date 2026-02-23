@@ -46,6 +46,7 @@ sub get_traceroute {
     return 'Database query error: ' . $dbh->errstr unless $sth;
     $sth->execute($target);
     my $result = $sth->fetchrow_array;
+    $sth->finish;
     $dbh->disconnect;
     return $result || 'No traceroute data available.';
 }

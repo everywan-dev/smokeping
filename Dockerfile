@@ -28,10 +28,11 @@ RUN chmod +x /usr/share/webapps/smokeping/telegram_notify.pl && \
     apk add --no-cache perl-dbi perl-dbd-sqlite perl-lwp-protocol-https perl-io-socket-ssl
 COPY frontend/ /usr/share/webapps/smokeping/
 COPY frontend/basepage.html /etc/smokeping/basepage.html
-COPY config/Targets /defaults/Targets
-COPY config/Alerts /defaults/Alerts
-COPY config/Probes /defaults/Probes
-COPY config/Presentation /defaults/Presentation
+# Override linuxserver defaults so our configs are seeded on first run
+COPY config/Targets /defaults/smoke-conf/Targets
+COPY config/Alerts /defaults/smoke-conf/Alerts
+COPY config/Probes /defaults/smoke-conf/Probes
+COPY config/Presentation /defaults/smoke-conf/Presentation
 COPY scripts/traceping-service-run /etc/services.d/traceping/run
 COPY scripts/traceping-server-run /etc/services.d/traceping-server/run
 COPY scripts/apply-config.sh /scripts/apply-config.sh
